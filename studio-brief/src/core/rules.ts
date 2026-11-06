@@ -23,6 +23,17 @@ export const STEP_META: Record<StepId, { title: string; short: string; question:
   timeline: { title: 'Prazo, investimento e prioridades', short: 'Prazo', question: 'Quando e com que prioridades?' },
 };
 
+export interface Screen { title: string; short: string; steps: StepId[] }
+export const SCREENS: Screen[] = [
+  { title: 'Cliente e objetivo', short: 'Cliente', steps: ['client', 'goals'] },
+  { title: 'Tipo e estilo', short: 'Estilo', steps: ['siteType', 'style'] },
+  { title: 'Cores e fontes', short: 'Cores', steps: ['colors', 'typography'] },
+  { title: 'Páginas e recursos', short: 'Páginas', steps: ['pages', 'features'] },
+  { title: 'Interface e conteúdo', short: 'Interface', steps: ['behavior', 'content'] },
+  { title: 'Técnico e prazo', short: 'Prazo', steps: ['tech', 'timeline'] },
+];
+export const screenOf = (s: StepId) => Math.max(0, SCREENS.findIndex((x) => x.steps.includes(s)));
+
 export function isLanding(p: Project) { return p.siteType === 'landing'; }
 
 /* ---------- páginas ---------- */

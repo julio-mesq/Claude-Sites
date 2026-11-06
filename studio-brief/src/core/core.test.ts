@@ -85,7 +85,7 @@ describe('importação e exportação', () => {
   it('sanitiza dados corrompidos', () => {
     const p = normalizeProject({ id: 5, status: 'xyz', currentStep: 99, colors: { primary: 'azul' }, pages: [null, { name: 3 }], features: 'x', style: { sliders: { detail: 400 } } });
     expect(p.status).toBe('progress');
-    expect(p.currentStep).toBe(11);
+    expect(p.currentStep).toBe(5);
     expect(p.colors.primary).toMatch(/^#[0-9A-F]{6}$/i);
     expect(p.style.sliders.detail).toBe(100);
     expect(p.features).toEqual([]);

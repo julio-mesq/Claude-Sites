@@ -57,7 +57,7 @@ export function PagesStep(props: StepProps) {
   const [open, setOpen] = useState<string | null>(null);
   const [drag, setDrag] = useState<{ from: number; over: number } | null>(null);
   const [custom, setCustom] = useState('');
-  if (!p.siteType) return <EmptyState icon={<FileText />} title="Escolha o tipo de site primeiro" text="As páginas sugeridas dependem do tipo de site." action={<Button onClick={() => props.goToStep(2)}>Ir para o tipo de site</Button>} />;
+  if (!p.siteType) return <EmptyState icon={<FileText />} title="Escolha o tipo de site primeiro" text="As páginas sugeridas dependem do tipo de site." action={<Button onClick={() => props.goToStep(1)}>Ir para o tipo de site</Button>} />;
   if (isLanding(p)) return <Landing {...props} />;
   const avail = availablePages(p);
   const sug = consistency(p);

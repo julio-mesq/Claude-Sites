@@ -83,5 +83,5 @@ export function buildTheme(p: Project): Theme {
 
 export function previewCopy(p: Project) {
   const t = siteTypeById(p.siteType) ?? siteTypeById('institutional')!;
-  return { brand: p.client.company.trim() || 'Sua marca', ...t.hero };
+  return { brand: p.client.company.trim() || 'Sua marca', place: p.client.city.trim(), ...t.hero };
 }

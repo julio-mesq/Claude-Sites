@@ -15,8 +15,8 @@ npm run test:e2e   # fluxo completo no navegador (Playwright, faz o build sozinh
 
 ## O que existe
 
-- **12 etapas** guiadas (cliente, objetivos, tipo de site, estilo, cores, tipografia, páginas, funcionalidades, aparência, conteúdo, requisitos técnicos, prazo e prioridades), com progresso, voltar/avançar, *pular*, *ainda não sei* e *quero uma recomendação* (a recomendação só é aplicada após confirmação).
-- **Prévia em tempo real** (computador e celular), alimentada por estilo, paleta, fontes, botões, cabeçalho, seções da página inicial e menu móvel. É sempre rotulada como simulação conceitual.
+- **6 telas** guiadas, cada uma com duas das 12 etapas (cliente, objetivos, tipo de site, estilo, cores, tipografia, páginas, funcionalidades, aparência, conteúdo, requisitos técnicos, prazo e prioridades), com progresso, voltar/avançar, *pular*, *ainda não sei* e *quero uma recomendação* (a recomendação só é aplicada após confirmação).
+- **Prévia sempre ao lado, em tempo real** (computador e celular), alimentada por nome da loja, cidade, recursos (WhatsApp, carrinho, busca, login), estilo, paleta, fontes, botões, cabeçalho, seções da página inicial e menu móvel. É sempre rotulada como simulação conceitual.
 - **Laboratório de cores** com paletas, HEX, combinações sugeridas, tema claro/escuro e verificação de contraste WCAG com correção sob confirmação.
 - **Editor de páginas** com renomear, reordenar (arrastar ou botões), página principal, seções por página e mapa de navegação. Para *landing page* a etapa vira seleção de seções.
 - **Coerência entre etapas**: marcar “Carrinho” sem a página correspondente, ou coletar dados sem política de privacidade, gera uma sugestão (nunca uma alteração silenciosa).

@@ -1,8 +1,7 @@
 import { useState } from 'react';
-import { Calendar, Check, Lock, MessageCircle, Plus, Search, ShoppingBag, Wand2 } from 'lucide-react';
+import { Calendar, Check, Lock, MessageCircle, Search, ShoppingBag, Wand2 } from 'lucide-react';
 import { Badge, Button, Callout, EmptyState } from '../components/ui';
 import { FEATURES, FEATURE_GROUPS, LEVEL_LABEL, siteTypeById, type FeatureDef } from '../core/catalogs';
-import { consistency } from '../core/rules';
 import { toggle } from '../core/utils';
 import { Sparkles } from 'lucide-react';
 import type { StepProps } from './shared';
@@ -42,9 +41,8 @@ function Item({ f, on, onToggle }: { f: FeatureDef; on: boolean; onToggle: () =>
 export function FeaturesStep({ p, set, goToStep }: StepProps) {
   const [more, setMore] = useState<Record<string, boolean>>({});
   const t = siteTypeById(p.siteType);
-  const sug = consistency(p);
   const tog = (id: string) => set((q) => ({ ...q, features: toggle(q.features, id) }));
-  if (!p.siteType) return <EmptyState icon={<Sparkles />} title="Escolha o tipo de site primeiro" text="Os recursos sugeridos dependem do tipo de site." action={<Button onClick={() => goToStep(2)}>Ir para o tipo de site</Button>} />;
+  if (!p.siteType) return <EmptyState icon={<Sparkles />} title="Escolha o tipo de site primeiro" text="Os recursos sugeridos dependem do tipo de site." action={<Button onClick={() => goToStep(1)}>Ir para o tipo de site</Button>} />;
   const missing = t ? t.features.filter((id) => !p.features.includes(id)) : [];
   return (
     <div className="stack-lg">
@@ -53,7 +51,6 @@ export function FeaturesStep({ p, set, goToStep }: StepProps) {
           Para <strong>{t?.name.toLowerCase()}</strong>, costumam fazer sentido {missing.length} {missing.length === 1 ? 'recurso' : 'recursos'}. Nada é marcado sem a sua confirmação.
         </Callout>
       )}
-      {sug.map((s) => <Callout key={s.id} kind="warn" action={<Button size="sm" onClick={() => set(s.apply)}><Plus size={14} aria-hidden /> {s.action.replace('Adicionar ', '')}</Button>}>{s.text}</Callout>)}
       {FEATURE_GROUPS.map((g) => {
         const all = FEATURES.filter((f) => f.group === g);
         const rel = all.filter((f) => f.types.includes(p.siteType!));

@@ -289,7 +289,7 @@ a { color: inherit; }
 .browser-bar { display: flex; align-items: center; gap: 6px; padding: 8px 10px; background: var(--surface-2); border-bottom: 1px solid var(--line); }
 .browser-bar i { width: 8px; height: 8px; border-radius: 50%; background: var(--line-strong); }
 .browser-bar .url { margin-left: 8px; flex: 1; height: 18px; border-radius: 5px; background: var(--surface); font-size: 10.5px; color: var(--muted); padding: 0 8px; display: flex; align-items: center; overflow: hidden; white-space: nowrap; }
-.phone-frame { width: 190px; margin: 0 auto; border-radius: 26px; border: 6px solid #20242B; background: var(--surface); overflow: hidden; box-shadow: var(--shadow-2); }
+.phone-frame { width: 250px; margin: 0 auto; border-radius: 26px; border: 6px solid #20242B; background: var(--surface); overflow: hidden; box-shadow: var(--shadow-2); }
 .scaled { position: relative; overflow: hidden; }
 .scaled-inner { transform-origin: top left; position: absolute; top: 0; left: 0; }
 .sim-note { font-size: 12px; color: var(--muted); display: flex; gap: 6px; align-items: flex-start; }
@@ -412,3 +412,12 @@ a { color: inherit; }
   .preview-col { box-shadow: none; visibility: hidden; }
   .preview-col.open { box-shadow: -20px 0 50px -20px rgba(20, 23, 28, 0.35); visibility: visible; }
 }
+
+.screen-part { margin-top: 56px; padding-top: 40px; border-top: 1px solid var(--line); }
+.part-title { font-size: 26px; line-height: 1.2; letter-spacing: -0.02em; font-weight: 600; margin-top: 8px; }
+.shell.with-preview { grid-template-columns: 220px minmax(0, 1fr) minmax(420px, 540px); }
+.shell.meeting.with-preview { grid-template-columns: minmax(0, 1fr) minmax(460px, 600px); }
+@media (max-width: 1280px) { .shell.with-preview { grid-template-columns: 200px minmax(0, 1fr) minmax(360px, 440px); } }
+@media (max-width: 1100px) { .shell.with-preview, .shell.meeting.with-preview { grid-template-columns: minmax(0, 1fr); } }
+.preview-live { display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ok); }
+.preview-live i { width: 7px; height: 7px; border-radius: 50%; background: var(--ok); }

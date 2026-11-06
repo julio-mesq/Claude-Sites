@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useRef, useState, type CSSProperties, type ReactNode } from 'react';
 import {
   ArrowRight, Calendar, Clock, FileText, Menu as MenuIcon, MessageCircle,
-  Package, Shield, ShoppingBag, Sparkles, Star, Users, X, Zap,
+  Package, Search, Shield, ShoppingBag, Sparkles, Star, User, Users, X, Zap,
 } from 'lucide-react';
 import type { Theme } from '../core/theme';
 import { mix } from '../core/contrast';
@@ -9,17 +9,18 @@ import { SECTIONS } from '../core/catalogs';
 
 export interface CanvasProps {
   theme: Theme;
-  copy: { brand: string; title: string; sub: string; cta: string };
+  copy: { brand: string; title: string; sub: string; cta: string; place?: string };
   nav: string[];
   sections: string[];
   device: 'desktop' | 'mobile';
+  extras?: { whatsapp: boolean; cart: boolean; search: boolean; login: boolean };
   menuOpen?: boolean;
   onMenuToggle?: () => void;
 }
 
 const WIDTH = { desktop: 1200, mobile: 375 };
 
-export function SiteCanvas({ theme: t, copy, nav, sections, device, menuOpen = false, onMenuToggle }: CanvasProps) {
+export function SiteCanvas({ theme: t, copy, nav, sections, device, extras, menuOpen = false, onMenuToggle }: CanvasProps) {
   const m = device === 'mobile';
   const pad = m ? Math.round(t.spacing * 0.55) : t.spacing;
   const gutter = m ? 20 : 48;
@@ -175,7 +176,7 @@ export function SiteCanvas({ theme: t, copy, nav, sections, device, menuOpen = f
   const heroInk = heroBold ? t.onPrimary : t.ink;
   const heroText = (center: boolean) => (
     <div style={{ textAlign: center ? 'center' : 'left', maxWidth: center ? 720 : 520, margin: center ? '0 auto' : 0 }}>
-      <div style={{ ...eyebrow, color: heroBold ? t.onPrimary : t.primary }}>{copy.brand}</div>
+      <div style={{ ...eyebrow, color: heroBold ? t.onPrimary : t.primary }}>{copy.brand}{copy.place ? ` · ${copy.place}` : ''}</div>
       <div style={h(t.hero === 'editorial' ? 64 : 56, { marginTop: 12, color: heroInk })}>{copy.title}</div>
       <p style={{ ...body, marginTop: 16, color: heroBold ? mix(t.onPrimary, t.primary, 0.15) : t.muted }}>{copy.sub}</p>
       <div style={{ display: 'flex', gap: 10, marginTop: m ? 16 : 28, justifyContent: center ? 'center' : 'flex-start', flexWrap: 'wrap' }}>
@@ -185,7 +186,12 @@ export function SiteCanvas({ theme: t, copy, nav, sections, device, menuOpen = f
     </div>
   );
   const hero = (
-    <section className="sc-sec" data-section="hero" style={{ background: heroBg }}>
+    <section className="sc-sec" data-section="hero" style={{ background: heroBg, position: 'relative' }}>
+      {extras?.whatsapp && (
+        <span aria-hidden style={{ position: 'absolute', right: m ? 12 : 28, bottom: m ? 12 : 28, zIndex: 3, width: m ? 38 : 54, height: m ? 38 : 54, borderRadius: '50%', background: '#1F9D55', color: '#fff', display: 'grid', placeItems: 'center', boxShadow: '0 8px 18px -8px rgba(0,0,0,.45)' }}>
+          <MessageCircle size={m ? 18 : 26} fill="currentColor" />
+        </span>
+      )}
       <div style={{ maxWidth: t.maxW, margin: '0 auto', padding: `${Math.round(pad * (t.hero === 'minimal' ? 1.5 : 1.1))}px ${gutter}px` }}>
         {t.hero === 'split' || t.hero === 'bold' && !m ? (
           <div style={{ ...cols(2), alignItems: 'center', gap: m ? 18 : 56 }}>{heroText(false)}<Ph ratio="4/3" style={heroBold ? { background: mix(t.primary, t.onPrimary, 0.15) } : undefined} /></div>
@@ -208,7 +214,13 @@ export function SiteCanvas({ theme: t, copy, nav, sections, device, menuOpen = f
       <div style={{ maxWidth: t.maxW + 160, margin: '0 auto', padding: `${m ? 12 : 18}px ${gutter}px`, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 20, flexDirection: !m && t.menu === 'centered' ? 'column' : 'row' }}>
         {logo}
         {!m && <nav aria-label="Menu simulado" style={{ display: 'flex', gap: 28 }}>{navLinks}</nav>}
+        {!m && extras && (extras.search || extras.login || extras.cart) && (
+          <span style={{ display: 'flex', gap: 14, color: t.ink, alignItems: 'center' }} aria-hidden>
+            {extras.search && <Search size={18} />}{extras.login && <User size={18} />}{extras.cart && <ShoppingBag size={18} />}
+          </span>
+        )}
         {!m && t.menu !== 'centered' && <span style={{ ...btn(true), padding: '9px 18px', fontSize: 13 }}>{copy.cta}</span>}
+        {m && extras?.cart && <ShoppingBag size={16} color={t.ink} aria-hidden />}
         {m && (<button type="button" onClick={onMenuToggle} aria-label={menuOpen ? 'Fechar menu simulado' : 'Abrir menu simulado'} style={{ background: 'none', border: `1px solid ${t.line}`, borderRadius: Math.min(t.radius, 8), color: t.ink, width: 30, height: 30, display: 'grid', placeItems: 'center', padding: 0 }}>{menuOpen ? <X size={16} /> : <MenuIcon size={16} />}</button>)}
       </div>
     </header>

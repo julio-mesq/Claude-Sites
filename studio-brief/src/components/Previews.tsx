@@ -17,11 +17,13 @@ function useCanvasProps(p: Project) {
     const nav = landing
       ? sections.filter((s) => s !== 'hero' && s !== 'cta').slice(0, 5).map((s) => ({ about: 'Sobre', services: 'Benefícios', steps: 'Como funciona', testimonials: 'Depoimentos', faq: 'Dúvidas', contact: 'Contato' } as Record<string, string>)[s] ?? 'Seção')
       : p.pages.length ? p.pages.map((x) => x.name) : type.structure;
-    return { theme, copy: previewCopy(p), nav, sections };
+    const has = (...ids: string[]) => ids.some((i) => p.features.includes(i));
+    const extras = { whatsapp: has('whatsapp', 'whatsapp-orders'), cart: has('cart'), search: has('search'), login: has('login', 'client-panel') };
+    return { theme, copy: previewCopy(p), nav, sections, extras };
   }, [p]);
 }
 
-export function DesktopPreview({ project, maxHeight = 420 }: { project: Project; maxHeight?: number }) {
+export function DesktopPreview({ project, maxHeight = 520 }: { project: Project; maxHeight?: number }) {
   const c = useCanvasProps(project);
   return (
     <div className="device-frame" aria-label="Prévia em computador">
@@ -31,7 +33,7 @@ export function DesktopPreview({ project, maxHeight = 420 }: { project: Project;
   );
 }
 
-export function MobilePreview({ project, maxHeight = 460 }: { project: Project; maxHeight?: number }) {
+export function MobilePreview({ project, maxHeight = 560 }: { project: Project; maxHeight?: number }) {
   const c = useCanvasProps(project);
   const [open, setOpen] = useState(false);
   return (
@@ -52,7 +54,7 @@ export function PreviewPanel({ project }: { project: Project }) {
   return (
     <section className="preview-panel" aria-label="Seu site tomando forma">
       <div className="preview-head">
-        <div style={{ flex: 1 }}><div className="eyebrow">Seu site tomando forma</div></div>
+        <div style={{ flex: 1 }}><div className="eyebrow">Seu site tomando forma</div><div className="preview-live"><i aria-hidden /> Atualiza a cada escolha</div></div>
         <Segmented label="Dispositivo" value={device} onChange={setDevice} options={[{ value: 'desktop', label: 'Computador' }, { value: 'mobile', label: 'Celular' }]} />
         <button type="button" className="btn btn-ghost icon-btn" aria-label="Ver prévia em tela cheia" title="Tela cheia" onClick={() => setFull(true)}><Maximize2 size={16} /></button>
       </div>

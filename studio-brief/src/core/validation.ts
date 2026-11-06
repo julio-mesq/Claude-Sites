@@ -1,5 +1,5 @@
 import { newProject } from './defaults';
-import { SCHEMA_VERSION, STEP_ORDER, type Project, type ProjectStatus, type StepFlag } from './types';
+import { SCHEMA_VERSION, SCREEN_COUNT, STEP_ORDER, type Project, type ProjectStatus, type StepFlag } from './types';
 import { SITE_TYPES, STYLES } from './catalogs';
 import { nowIso } from './utils';
 
@@ -39,7 +39,7 @@ export function normalizeProject(raw: unknown): Project {
   p.createdAt = Number.isNaN(Date.parse(str(r.createdAt))) ? nowIso() : str(r.createdAt);
   p.updatedAt = Number.isNaN(Date.parse(str(r.updatedAt))) ? nowIso() : str(r.updatedAt);
   if (!STATUSES.includes(p.status)) p.status = 'progress';
-  p.currentStep = Math.min(Math.max(Math.trunc(p.currentStep) || 0, 0), STEP_ORDER.length - 1);
+  p.currentStep = Math.min(Math.max(Math.trunc(p.currentStep) || 0, 0), SCREEN_COUNT - 1);
   p.visited = strArray(r.visited).filter((s): s is Project['visited'][number] => (STEP_ORDER as string[]).includes(s));
   p.flags = Object.fromEntries(Object.entries(p.flags).filter(([k, v]) => (STEP_ORDER as string[]).includes(k) && ['skipped', 'unknown', 'recommend'].includes(v))) as Partial<Record<Project['visited'][number], StepFlag>>;
   if (p.siteType && !SITE_TYPES.some((t) => t.id === p.siteType)) p.siteType = null;

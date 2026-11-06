@@ -107,3 +107,5 @@ export const STEP_ORDER: StepId[] = [
   'client', 'goals', 'siteType', 'style', 'colors', 'typography',
   'pages', 'features', 'behavior', 'content', 'tech', 'timeline',
 ];
+
+export const SCREEN_COUNT = 6;

@@ -11,7 +11,7 @@ export function parseHash(hash: string): Route {
   if (parts[0] === 'p' && parts[1]) {
     const id = decodeURIComponent(parts[1]);
     if (parts[2] === 'overview') return { name: 'overview', id };
-    if (parts[2] === 'step') return { name: 'step', id, step: Math.max(0, Math.min(11, Number(parts[3]) || 0)) };
+    if (parts[2] === 'step') return { name: 'step', id, step: Math.max(0, Math.min(5, Number(parts[3]) || 0)) };
     return { name: 'welcome', id };
   }
   return { name: 'home' };

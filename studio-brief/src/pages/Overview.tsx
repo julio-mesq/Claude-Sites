@@ -6,8 +6,7 @@ import { exportJson, goalLabels, summaryText } from '../core/export';
 import { effective } from '../steps/Step9Behavior';
 import { buildTheme } from '../core/theme';
 import { checkContrast } from '../core/contrast';
-import { pendencies, STEP_META } from '../core/rules';
-import { STEP_ORDER } from '../core/types';
+import { pendencies, screenOf, STEP_META } from '../core/rules';
 import { parseImport, projectDisplayName } from '../core/validation';
 import { formatDate, formatDateTime } from '../core/utils';
 import { useStore } from '../core/store';
@@ -185,7 +184,7 @@ export function Overview({ project: p }: { project: Project }) {
             {pend.length === 0 ? <p className="muted">Nada em aberto. O briefing está completo.</p> : (
               <ul style={{ margin: 0, paddingLeft: 0, listStyle: 'none', display: 'grid', gap: 8 }}>{pend.map((x) => (
                 <li key={x.id} className="row" style={{ gap: 10 }}><span style={{ flex: 1 }}>{x.text}</span>
-                  <a className="btn btn-ghost btn-sm no-print" href={href.step(p.id, STEP_ORDER.indexOf(x.step))}>Resolver · {STEP_META[x.step].short}</a></li>))}</ul>
+                  <a className="btn btn-ghost btn-sm no-print" href={href.step(p.id, screenOf(x.step))}>Resolver · {STEP_META[x.step].short}</a></li>))}</ul>
             )}
           </Sec>
           <p className="tiny muted" style={{ textAlign: 'center' }}>Gerado com Studio Brief · {profile.name || 'responsável não informado'} · {formatDate(new Date().toISOString())}</p>

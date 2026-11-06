@@ -49,6 +49,9 @@ try {
     await page.getByLabel('E-mail').fill('marina@atelier.com.br');
     await page.getByLabel('Nome do cliente').fill('Marina Duarte');
     await page.getByLabel('Empresa ou marca').fill('Atelier Norte');
+    await page.locator('.preview-col').getByText('Atelier Norte').first().waitFor(); // prévia já mostra o nome
+    await page.getByLabel('Cidade e região de atendimento').fill('Curitiba');
+    await page.locator('.preview-col').getByText(/Curitiba/).first().waitFor();
     await page.getByLabel('Segmento de atuação').fill('Arquitetura');
     await page.getByLabel('WhatsApp').fill('11912345678');
     assert.equal(await page.getByLabel('WhatsApp').inputValue(), '(11) 91234-5678');
@@ -57,8 +60,7 @@ try {
     await page.getByLabel('Visível apenas no modo de edição').fill('Cliente quer entrega antes de março. NOTA-SECRETA');
   });
 
-  await step('etapa 2: objetivos múltiplos e perguntas complementares', async () => {
-    await next();
+  await step('mesma tela: objetivos múltiplos e perguntas complementares', async () => {
     await page.getByRole('button', { name: /Apresentar meus serviços/ }).click();
     await page.getByRole('button', { name: /Conseguir novos clientes/ }).click();
     await page.getByLabel('Quem é o seu público-alvo?').fill('Famílias que vão reformar a casa');
@@ -74,8 +76,7 @@ try {
     await shot('03-tipo');
   });
 
-  await step('etapa 4: estilo, característica secundária e sliders', async () => {
-    await next();
+  await step('mesma tela: estilo, característica secundária e sliders', async () => {
     await page.getByRole('radio', { name: /Elegante/ }).click();
     await page.getByRole('button', { name: 'Acolhedor' }).click();
     const sl = page.locator('#sl-presence');
@@ -92,19 +93,19 @@ try {
     await page.getByText(/Abaixo de 3:1/).first().waitFor(); // cor principal clara demais sobre o fundo
     await hex.fill('#1F5F8B');
     assert.equal(await hex.inputValue(), '#1F5F8B');
+    await page.waitForFunction(() => [...document.querySelectorAll('.preview-col [data-section="hero"] span')].some((e) => getComputedStyle(e).backgroundColor === 'rgb(31, 95, 139)')); // prévia muda de cor
     await hex.fill('zzz'); await page.getByText('Use o formato #RRGGBB.').waitFor();
     await hex.fill('#1F5F8B');
-    await page.getByRole('radio', { name: 'Escuro' }).click();
+    await page.getByRole('radio', { name: 'Escuro', exact: true }).click();
     await page.getByRole('button', { name: 'Aplicar combinação Complementar' }).click();
-    await page.getByRole('radio', { name: 'Claro' }).click();
+    await page.getByRole('radio', { name: 'Claro', exact: true }).click();
     await shot('05-cores');
   });
 
-  await step('etapa 6: tipografia', async () => {
-    await next();
-    await page.getByRole('radio', { name: 'Tradicional' }).click();
+  await step('mesma tela: tipografia', async () => {
+    await page.getByRole('radio', { name: 'Tradicional', exact: true }).click();
     await page.getByRole('radio', { name: /Editorial clássica/ }).click();
-    await page.getByRole('radio', { name: 'Forte' }).click();
+    await page.getByRole('radio', { name: 'Forte', exact: true }).click();
     await page.getByLabel('Fonte dos textos').selectOption('manrope');
     await shot('06-fontes');
   });
@@ -126,13 +127,12 @@ try {
     await shot('07-paginas');
   });
 
-  await step('etapa 8: funcionalidades, sugestões coerentes e demonstração', async () => {
-    await next();
+  await step('mesma tela: funcionalidades, sugestões coerentes e demonstração', async () => {
     await page.getByRole('button', { name: /Aplicar/ }).first().click();
     await page.getByRole('button', { name: /Botão do WhatsApp/ }).waitFor();
-    await page.getByRole('button', { name: /Blog/ }).first().click(); // marca blog
+    await page.waitForFunction(() => [...document.querySelectorAll('.preview-col [data-section="hero"] span')].some((e) => getComputedStyle(e).backgroundColor === 'rgb(31, 157, 85)')); // botão do WhatsApp aparece na prévia
+    await page.locator('button.feature', { hasText: 'Blog' }).first().click(); // marca blog
     await page.getByText(/ainda não há a página “Blog”/).waitFor();
-    await page.getByRole('button', { name: /Adicionar “Blog”|Blog/ }).filter({ hasText: /Blog/ }).first().isVisible();
     await shot('08-features');
   });
 
@@ -144,8 +144,7 @@ try {
     await page.getByRole('radio', { name: 'Fixo ao rolar' }).click();
   });
 
-  await step('etapa 10: conteúdo e referências', async () => {
-    await next();
+  await step('mesma tela: conteúdo e referências', async () => {
     await page.getByRole('radio', { name: 'Tenho' }).first().click();
     await page.getByRole('radio', { name: 'Não tenho' }).nth(3).click();
     await page.getByRole('button', { name: /Adicionar referência/ }).click();
@@ -163,8 +162,7 @@ try {
     await page.getByRole('radio', { name: 'Não sei' }).nth(1).click();
   });
 
-  await step('etapa 12: prazo e prioridades', async () => {
-    await next();
+  await step('mesma tela: prazo e prioridades', async () => {
     await page.getByLabel('Data desejada de lançamento').fill('2027-03-01');
     await page.getByRole('radio', { name: 'Indispensável' }).first().click();
     await page.getByRole('radio', { name: 'O cliente' }).click();
@@ -176,21 +174,22 @@ try {
     await page.getByRole('dialog', { name: 'Resumo até agora' }).getByText('Atelier Norte').waitFor();
     await page.getByRole('button', { name: 'Editar Estilo' }).click();
     await page.getByRole('radio', { name: /Elegante/ }).waitFor();
-    assert.match(page.url(), /step\/3$/);
+    assert.match(page.url(), /step\/1$/);
   });
 
   await step('navegar para trás e para a frente mantém as escolhas', async () => {
-    await back(); // etapa 3
     assert.equal(await page.getByRole('radio', { name: /Site institucional/ }).getAttribute('aria-checked'), 'true');
+    await back();
+    assert.equal(await page.getByLabel('Nome do cliente').inputValue(), 'Marina Duarte');
     await next();
     assert.equal(await page.getByRole('radio', { name: /Elegante/ }).getAttribute('aria-checked'), 'true');
   });
 
   await step('pular, “ainda não sei” e recomendação (com confirmação)', async () => {
-    await page.goto(URL + '#/p/' + page.url().match(/\/p\/([^/]+)/)[1] + '/step/5');
-    await page.getByRole('button', { name: 'Ainda não sei' }).click(); // vai para etapa 7
+    await page.goto(URL + '#/p/' + page.url().match(/\/p\/([^/]+)/)[1] + '/step/2');
+    await page.getByRole('button', { name: 'Ainda não sei' }).click(); // vai para a tela 4
     await page.getByRole('button', { name: /Voltar/ }).first().click();
-    await page.getByText(/Marcado como “ainda não sei”/).waitFor();
+    await page.getByText(/Marcado como “ainda não sei”/).first().waitFor();
     await page.getByRole('button', { name: /Quero uma recomendação/ }).click();
     await page.getByRole('region', { name: 'Recomendação' }).waitFor();
     await page.getByRole('button', { name: 'Agora não' }).click();
@@ -206,7 +205,7 @@ try {
   });
 
   await step('prévia desktop e celular, menu móvel e tela cheia', async () => {
-    await page.goto(URL + '#/p/' + page.url().match(/\/p\/([^/]+)/)[1] + '/step/3');
+    await page.goto(URL + '#/p/' + page.url().match(/\/p\/([^/]+)/)[1] + '/step/1');
     await page.getByRole('radio', { name: 'Celular' }).click();
     await page.getByLabel('Abrir menu simulado').click();
     await page.getByLabel('Fechar menu simulado').waitFor();
@@ -331,7 +330,7 @@ try {
     await page.goto(URL + `#/p/${id}/overview`);
     await page.getByRole('heading', { name: 'Projeto sem nome' }).waitFor();
     assert.ok((await page.locator('#ov-20').locator('..').locator('li').count()) > 5);
-    for (const s of [2, 6, 7, 11]) { await page.goto(URL + `#/p/${id}/step/${s}`); await page.waitForTimeout(150); }
+    for (const s of [1, 3, 4, 5]) { await page.goto(URL + `#/p/${id}/step/${s}`); await page.waitForTimeout(150); }
   });
 
   await step('celular: layout sem rolagem horizontal', async () => {
@@ -339,7 +338,7 @@ try {
     const m = await browser.newContext({ viewport: { width: 390, height: 844 }, deviceScaleFactor: 2, storageState: await ctx.storageState() });
     const mp = await m.newPage();
     await mp.goto(URL);
-    for (const hash of ['', `#/p/${projectId}/step/0`, `#/p/${projectId}/step/3`, `#/p/${projectId}/step/4`, `#/p/${projectId}/step/6`, `#/p/${projectId}/step/7`, `#/p/${projectId}/step/8`, `#/p/${projectId}/step/10`, `#/p/${projectId}/overview`]) {
+    for (const hash of ['', ...[0, 1, 2, 3, 4, 5].map((n) => `#/p/${projectId}/step/${n}`), `#/p/${projectId}/overview`]) {
       await mp.goto(URL + hash); await mp.waitForTimeout(400);
       const over = await mp.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
       if (over > 1) {
@@ -347,7 +346,7 @@ try {
         assert.fail(`rolagem horizontal em ${hash || 'home'}: ${over}px — ${who.join(' | ')}`);
       }
     }
-    await mp.goto(URL + `#/p/${projectId}/step/3`); await mp.waitForTimeout(400);
+    await mp.goto(URL + `#/p/${projectId}/step/1`); await mp.waitForTimeout(400);
     await mp.screenshot({ path: path.join(OUT, 'mobile-estilo.png') });
     await m.close();
   });
