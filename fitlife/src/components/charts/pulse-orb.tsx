@@ -29,7 +29,8 @@ export function PulseOrb({ score, label, size = 200, hasData = true }: { score: 
           const a = (i / 40) * Math.PI * 2;
           const r1 = r + 14;
           const r2 = r + (i % 5 === 0 ? 20 : 17);
-          return <line key={i} x1={size / 2 + Math.cos(a) * r1} y1={size / 2 + Math.sin(a) * r1} x2={size / 2 + Math.cos(a) * r2} y2={size / 2 + Math.sin(a) * r2} stroke={i / 40 < score / 100 ? "rgba(182,255,59,0.55)" : "rgba(255,255,255,0.08)"} strokeWidth={1.5} />;
+          const q = (n: number) => Math.round(n * 100) / 100;
+          return <line key={i} x1={q(size / 2 + Math.cos(a) * r1)} y1={q(size / 2 + Math.sin(a) * r1)} x2={q(size / 2 + Math.cos(a) * r2)} y2={q(size / 2 + Math.sin(a) * r2)} stroke={i / 40 < score / 100 ? "rgba(182,255,59,0.55)" : "rgba(255,255,255,0.08)"} strokeWidth={1.5} />;
         })}
         <motion.circle
           cx={size / 2}

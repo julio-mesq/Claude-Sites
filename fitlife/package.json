@@ -9,14 +9,17 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run",
+    "test": "vitest run tests/unit",
     "test:watch": "vitest",
     "test:e2e": "playwright test --trace off",
     "db:migrate": "prisma migrate dev",
     "db:deploy": "prisma migrate deploy",
     "db:seed": "tsx prisma/seed.ts",
     "db:reset": "prisma migrate reset --force",
-    "postinstall": "prisma generate"
+    "postinstall": "prisma generate",
+    "test:api": "VITEST_API=1 vitest run tests/api",
+    "test:all": "VITEST_API=1 vitest run",
+    "check": "tsc --noEmit && next lint && vitest run tests/unit"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

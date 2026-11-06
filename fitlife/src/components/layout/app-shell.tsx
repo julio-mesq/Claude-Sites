@@ -84,6 +84,7 @@ function Notifications() {
     load();
     const t = setInterval(load, 60_000);
     return () => clearInterval(t);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   useEffect(() => {
     const on = (e: MouseEvent) => ref.current && !ref.current.contains(e.target as Node) && setOpen(false);

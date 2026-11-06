@@ -13,7 +13,7 @@ import { ProgressBar, Ring } from "@/components/ui/progress";
 import { useConfirm } from "@/components/ui/confirm";
 import { Bars } from "@/components/charts/charts";
 import { MEAL_LABEL } from "@/lib/labels";
-import { foodItemSchema, mealEntrySchema, recipeSchema, targetsSchema } from "@/lib/validations/nutrition";
+import { mealEntrySchema, recipeSchema, targetsSchema } from "@/lib/validations/nutrition";
 import { addDaysKey, cn, formatDate, formatNumber } from "@/lib/utils";
 
 type Entry = { id: string; name: string; quantity: number; unit: string; calories: number; proteinG: number; carbsG: number; fatG: number };
@@ -723,6 +723,7 @@ function Shopping() {
   const load = () => api<{ items: NonNullable<typeof items> }>("/nutrition/shopping").then((r) => setItems(r.items));
   useEffect(() => {
     load();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
   const checked = useMemo(() => items?.filter((i) => i.checked).length ?? 0, [items]);
   return (
