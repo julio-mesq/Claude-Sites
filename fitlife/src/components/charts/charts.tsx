@@ -1,6 +1,6 @@
 "use client";
 
-import { Area, AreaChart, Bar, BarChart, CartesianGrid, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
+import { Area, AreaChart, Bar, BarChart, CartesianGrid, Cell, Legend, Line, LineChart, ResponsiveContainer, Tooltip, XAxis, YAxis } from "recharts";
 import { formatDate } from "@/lib/utils";
 
 // Tokens de gráfico. Paleta categórica validada (OKLCH, CVD e contraste) contra a superfície escura #101414.
@@ -72,7 +72,7 @@ export function TrendArea({ data, unit, label, height = 220 }: { data: { date: s
   );
 }
 
-export function Bars({ data, xKey, yKey, label, unit, height = 200, xFormat, highlightLast }: { data: Record<string, string | number>[]; xKey: string; yKey: string; label: string; unit?: string; height?: number; xFormat?: "day-month"; highlightLast?: boolean }) {
+export function Bars({ data, xKey, yKey, label, unit, height = 200, xFormat, highlightLast }: { data: Record<string, string | number | null>[]; xKey: string; yKey: string; label: string; unit?: string; height?: number; xFormat?: "day-month"; highlightLast?: boolean }) {
   const fmt = xFormat === "day-month" ? (v: string) => formatDate(v, { day: "2-digit", month: "2-digit" }) : undefined;
   return (
     <div style={{ height }}>
@@ -82,19 +82,11 @@ export function Bars({ data, xKey, yKey, label, unit, height = 200, xFormat, hig
           <XAxis dataKey={xKey} tick={AXIS} axisLine={false} tickLine={false} tickFormatter={fmt} interval="preserveStartEnd" />
           <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
           <Tooltip content={<TooltipBox unit={unit} labelFormat={fmt} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
-          <Bar
-            dataKey={yKey}
-            name={label}
-            radius={[4, 4, 0, 0]}
-            fill={BRAND}
-            shape={(props: unknown) => {
-              const p = props as { x: number; y: number; width: number; height: number; index: number };
-              const last = highlightLast && p.index === data.length - 1;
-              const r = Math.min(4, p.width / 2, p.height);
-              if (p.height <= 0) return <g />;
-              return <path d={`M${p.x},${p.y + p.height} V${p.y + r} Q${p.x},${p.y} ${p.x + r},${p.y} H${p.x + p.width - r} Q${p.x + p.width},${p.y} ${p.x + p.width},${p.y + r} V${p.y + p.height} Z`} fill={BRAND} fillOpacity={highlightLast ? (last ? 1 : 0.45) : 0.85} />;
-            }}
-          />
+          <Bar dataKey={yKey} name={label} radius={[4, 4, 0, 0]} maxBarSize={36} isAnimationActive={false}>
+            {data.map((_, i) => (
+              <Cell key={i} fill={BRAND} fillOpacity={highlightLast ? (i === data.length - 1 ? 1 : 0.45) : 0.85} />
+            ))}
+          </Bar>
         </BarChart>
       </ResponsiveContainer>
       <SrTable caption={label} cols={[xKey, label]} rows={data.map((d) => [String(d[xKey]), d[yKey] as number])} />

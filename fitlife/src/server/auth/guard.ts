@@ -13,7 +13,8 @@ export async function requireUser(opts: { onboarded?: boolean } = { onboarded: t
 }
 
 export async function requireRole(role: Role) {
-  const user = await requireUser();
+  // A área administrativa não exige onboarding fitness.
+  const user = await requireUser({ onboarded: false });
   if (!hasRole(user.role, role)) redirect("/app?denied=1");
   return user;
 }

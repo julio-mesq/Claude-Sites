@@ -66,11 +66,11 @@ export async function activityDayKeys(userId: string, sinceDays = 400) {
   const since = new Date(Date.now() - sinceDays * 86400_000);
   const rows = await db.$queryRaw<{ d: string }[]>`
     SELECT DISTINCT to_char(d, 'YYYY-MM-DD') AS d FROM (
-      SELECT ("startedAt" AT TIME ZONE 'America/Sao_Paulo')::date AS d FROM workout_sessions WHERE "userId" = ${userId} AND status = 'COMPLETED' AND "startedAt" >= ${since}
+      SELECT ("startedAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date AS d FROM workout_sessions WHERE "userId" = ${userId} AND status = 'COMPLETED' AND "startedAt" >= ${since}
       UNION SELECT date AS d FROM habit_logs WHERE "userId" = ${userId} AND date >= ${since}::date
       UNION SELECT m.date AS d FROM meals m WHERE m."userId" = ${userId} AND m.date >= ${since}::date AND m."isCustomTemplate" = false AND EXISTS (SELECT 1 FROM meal_entries e WHERE e."mealId" = m.id)
       UNION SELECT date AS d FROM water_logs WHERE "userId" = ${userId} AND date >= ${since}::date
-      UNION SELECT ("measuredAt" AT TIME ZONE 'America/Sao_Paulo')::date AS d FROM body_measurements WHERE "userId" = ${userId} AND "measuredAt" >= ${since}
+      UNION SELECT ("measuredAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date AS d FROM body_measurements WHERE "userId" = ${userId} AND "measuredAt" >= ${since}
     ) t`;
   return rows.map((r) => r.d);
 }

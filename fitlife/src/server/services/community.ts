@@ -6,6 +6,7 @@ import { audit } from "../audit";
 import { rateLimit } from "../rate-limit";
 import type { postSchema, reportSchema } from "@/lib/validations/tracking";
 import { notify } from "./notifications";
+import { appSettings } from "./app-settings";
 
 const BANNED = [/\bhttps?:\/\/\S+/gi]; // links externos bloqueados para reduzir spam/phishing
 const SPAM_WORDS = /(ganhe dinheiro|clique aqui|promoção imperdível|bit\.ly|whatsapp\.com\/|t\.me\/)/i;
@@ -17,6 +18,7 @@ function sanitize(text: string) {
 }
 
 async function assertCommunityAccess(userId: string, needVerified = true) {
+  if (!(await appSettings()).communityEnabled) throw Errors.unavailable("A comunidade está temporariamente suspensa.");
   const u = await db.user.findUniqueOrThrow({ where: { id: userId }, select: { emailVerifiedAt: true, preferences: { select: { communityEnabled: true } } } });
   if (!u.preferences?.communityEnabled) throw Errors.forbidden("Ative a comunidade nas configurações para participar.");
   if (needVerified && !u.emailVerifiedAt) throw Errors.forbidden("Confirme seu e-mail para publicar na comunidade.");

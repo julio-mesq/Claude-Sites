@@ -6,6 +6,7 @@ import { Errors } from "../errors";
 import { audit } from "../audit";
 import type { exerciseAdminSchema } from "@/lib/validations/fitness";
 import { addDaysKey, dateKey, zonedStartOfDay } from "@/lib/utils";
+import { invalidateAppSettings } from "./app-settings";
 
 export async function overview() {
   const today = dateKey();
@@ -18,7 +19,7 @@ export async function overview() {
     db.workoutSession.count({ where: { status: "COMPLETED", startedAt: { gte: d30 } } }),
     db.report.count({ where: { status: "OPEN" } }),
     db.subscription.groupBy({ by: ["plan"], _count: true, where: { status: { in: ["ACTIVE", "TRIALING"] } } }),
-    db.$queryRaw<{ d: string; n: bigint }[]>`SELECT to_char(("createdAt" AT TIME ZONE 'America/Sao_Paulo')::date, 'YYYY-MM-DD') AS d, COUNT(*) AS n FROM users WHERE "createdAt" >= ${d30} GROUP BY 1 ORDER BY 1`,
+    db.$queryRaw<{ d: string; n: bigint }[]>`SELECT to_char(("createdAt" AT TIME ZONE 'UTC' AT TIME ZONE 'America/Sao_Paulo')::date, 'YYYY-MM-DD') AS d, COUNT(*) AS n FROM users WHERE "createdAt" >= ${d30} GROUP BY 1 ORDER BY 1`,
   ]);
   const map = new Map(signups.map((s) => [s.d, Number(s.n)]));
   return {
@@ -153,5 +154,6 @@ export async function getSettings() {
 
 export async function setSetting(actorId: string, key: string, value: Prisma.InputJsonValue) {
   await db.appSetting.upsert({ where: { key }, create: { key, value }, update: { value } });
+  invalidateAppSettings();
   await audit("admin.setting_updated", { actorId, target: key, meta: { value } });
 }

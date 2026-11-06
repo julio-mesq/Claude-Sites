@@ -7,11 +7,11 @@ import { AnimatePresence, motion } from "motion/react";
 import { Bell, ChevronDown, Grid3x3, LogOut, Shield, User, X } from "lucide-react";
 import { toast } from "sonner";
 import { api } from "@/lib/api";
-import { cn, initials } from "@/lib/utils";
+import { APP_TIMEZONE, cn, initials } from "@/lib/utils";
 import { Logo } from "./logo";
 import { MOBILE_TABS, NAV_GROUPS, isActive } from "./nav";
 
-export type ShellUser = { name: string; email: string; role: string; level: number; xp: number; hasAvatar: boolean; emailVerified: boolean; reducedMotion: boolean; plan: string; activeSession: { id: string; name: string } | null };
+export type ShellUser = { name: string; email: string; role: string; level: number; xp: number; hasAvatar: boolean; emailVerified: boolean; reducedMotion: boolean; plan: string; activeSession: { id: string; name: string } | null; notice?: string | null };
 
 export function Avatar({ name, has, size = 36, userId }: { name: string; has: boolean; size?: number; userId?: string }) {
   return has ? (
@@ -134,7 +134,7 @@ function Notifications() {
                     <span className="min-w-0">
                       <span className="block text-sm font-medium">{n.title}</span>
                       <span className="mt-0.5 block text-xs text-mist">{n.body}</span>
-                      <span className="mt-1 block text-[10px] text-mist-700">{new Date(n.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short" })}</span>
+                      <span className="mt-1 block text-[10px] text-mist-700">{new Date(n.createdAt).toLocaleString("pt-BR", { dateStyle: "short", timeStyle: "short", timeZone: APP_TIMEZONE })}</span>
                     </span>
                   </button>
                 </li>
@@ -297,13 +297,14 @@ export function AppShell({ user, children }: { user: ShellUser; children: ReactN
   useEffect(() => {
     document.documentElement.dataset.reducedMotion = String(user.reducedMotion);
   }, [user.reducedMotion]);
-  const today = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long" }).format(new Date());
+  const today = new Intl.DateTimeFormat("pt-BR", { weekday: "long", day: "numeric", month: "long", timeZone: APP_TIMEZONE }).format(new Date());
   const inPlayer = pathname.startsWith("/app/workouts/session/");
   return (
     <div className="min-h-dvh">
       <Sidebar pathname={pathname} user={user} />
       <div className="lg:pl-64">
         <header className="glass-strong sticky top-0 z-30 border-b border-white/5">
+          {user.notice && <div className="border-b border-info/20 bg-info/10 px-4 py-2 text-center text-xs text-info" role="status">{user.notice}</div>}
           {!user.emailVerified && <EmailBanner />}
           <div className="flex h-16 items-center justify-between gap-3 px-4 sm:px-6">
             <div className="flex items-center gap-3 lg:hidden">

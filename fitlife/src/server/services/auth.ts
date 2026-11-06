@@ -10,8 +10,10 @@ import { createSession, destroyCurrentSession } from "../auth/session";
 import { consumeToken, issueToken } from "../auth/tokens";
 import { resetEmail, sendMail, verificationEmail } from "../mail";
 import { rateLimit } from "../rate-limit";
+import { appSettings } from "./app-settings";
 
 export async function register(input: { name: string; email: string; password: string }, ip: string | null) {
+  if (!(await appSettings()).signupEnabled) throw Errors.forbidden("Novos cadastros estão temporariamente pausados.");
   await rateLimit(`register:${ip ?? "unknown"}`, 5, 3600);
   const exists = await db.user.findUnique({ where: { email: input.email }, select: { id: true } });
   if (exists) throw Errors.conflict("Já existe uma conta com este e-mail.");
