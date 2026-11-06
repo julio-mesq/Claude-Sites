@@ -17,8 +17,8 @@
   --color-info: #3bc8ff;
   --color-violet: #9b8cff;
 
-  --font-sans: var(--font-inter), ui-sans-serif, system-ui, sans-serif;
-  --font-display: var(--font-sora), var(--font-inter), ui-sans-serif, system-ui, sans-serif;
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
 
   --radius-xl2: 1.25rem;
   --shadow-glow: 0 0 0 1px rgb(182 255 59 / 0.25), 0 8px 30px -8px rgb(182 255 59 / 0.35);
