@@ -458,7 +458,7 @@ function FinishModal({ open, onClose, sessionId, setsCount }: { open: boolean; o
     try {
       const r = await api<{ xp: number; newRecords: { exercise: string; loadKg: number; reps: number }[]; durationSec: number }>(`/sessions/${sessionId}/finish`, { method: "POST", body: { status: "COMPLETED", perceivedEffort: effort, notes: notes || null } });
       if (r.xp > 0) toast.success(`Treino concluído! +${r.xp} XP`);
-      else toast.success("Treino concluído!", { description: r.durationSec < 300 ? "Sessões com menos de 5 minutos não somam XP." : "Limite diário de XP por treinos atingido." });
+      else toast.success("Treino concluído!", { description: r.durationSec < 300 ? "Sessões com menos de 5 minutos não contam para XP, conquistas e missões." : "Limite diário de XP por treinos atingido." });
       r.newRecords.forEach((rec) => toast(`🏆 Novo recorde: ${rec.exercise}`, { description: `${rec.loadKg} kg × ${rec.reps}` }));
       router.refresh();
     } catch (e) {

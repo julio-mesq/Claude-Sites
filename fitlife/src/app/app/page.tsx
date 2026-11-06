@@ -185,7 +185,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
           <CardHeader title="Histórico de treinos" subtitle="Treinos concluídos por semana (8 semanas)" icon={<Trophy className="h-4 w-4" />} />
           <div className="p-4 pt-2">
             {d.charts.weekly.some((w) => w.workouts > 0) ? (
-              <Bars data={d.charts.weekly} xKey="week" yKey="workouts" label="Treinos" xFormat={(v) => formatDate(v, { day: "2-digit", month: "2-digit" })} highlightLast />
+              <Bars data={d.charts.weekly} xKey="week" yKey="workouts" label="Treinos" xFormat="day-month" highlightLast />
             ) : (
               <EmptyState icon={<Dumbbell className="h-6 w-6" />} title="Nenhum treino concluído ainda" description="Conclua seu primeiro treino para ver o histórico." />
             )}

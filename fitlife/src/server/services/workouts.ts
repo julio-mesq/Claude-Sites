@@ -7,7 +7,7 @@ import { PLAN_LIMITS } from "../permissions";
 import type { finishSessionSchema, logSetSchema, workoutSchema } from "@/lib/validations/fitness";
 import { estimate1Rm } from "@/lib/fitness-math";
 import { dateKey, zonedStartOfDay } from "@/lib/utils";
-import { addMilestone, afterActivity, awardXp, XP } from "./gamification";
+import { addMilestone, afterActivity, awardXp, MIN_VALID_SESSION_SEC, XP } from "./gamification";
 import { getPlan } from "./billing";
 
 // ───────────── Biblioteca ─────────────
@@ -187,7 +187,7 @@ export async function finishSession(userId: string, sessionId: string, input: z.
   }
 
   // XP com proteção anti-abuso: sessões muito curtas não pontuam e há limite diário.
-  if (durationSec >= 300) {
+  if (durationSec >= MIN_VALID_SESSION_SEC) {
     const todayStart = zonedStartOfDay(dateKey());
     const xpToday = await db.xpEvent.count({ where: { userId, reason: "Treino concluído", createdAt: { gte: todayStart } } });
     if (xpToday < XP.maxXpWorkoutsPerDay) {
@@ -197,8 +197,8 @@ export async function finishSession(userId: string, sessionId: string, input: z.
     }
   }
 
-  const completed = await db.workoutSession.count({ where: { userId, status: "COMPLETED" } });
-  if (completed === 1) await addMilestone(userId, "FIRST_WORKOUT", "Primeiro treino", `Você concluiu "${s.name}".`, "first-workout", { sessionId: s.id });
+  const completed = await db.workoutSession.count({ where: { userId, status: "COMPLETED", durationSec: { gte: MIN_VALID_SESSION_SEC } } });
+  if (completed === 1 && durationSec >= MIN_VALID_SESSION_SEC) await addMilestone(userId, "FIRST_WORKOUT", "Primeiro treino", `Você concluiu "${s.name}".`, "first-workout", { sessionId: s.id });
 
   // Marca o evento do calendário de hoje correspondente como concluído.
   if (s.workoutId) {

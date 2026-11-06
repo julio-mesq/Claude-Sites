@@ -72,15 +72,16 @@ export function TrendArea({ data, unit, label, height = 220 }: { data: { date: s
   );
 }
 
-export function Bars({ data, xKey, yKey, label, unit, height = 200, xFormat, highlightLast }: { data: Record<string, string | number>[]; xKey: string; yKey: string; label: string; unit?: string; height?: number; xFormat?: (v: string) => string; highlightLast?: boolean }) {
+export function Bars({ data, xKey, yKey, label, unit, height = 200, xFormat, highlightLast }: { data: Record<string, string | number>[]; xKey: string; yKey: string; label: string; unit?: string; height?: number; xFormat?: "day-month"; highlightLast?: boolean }) {
+  const fmt = xFormat === "day-month" ? (v: string) => formatDate(v, { day: "2-digit", month: "2-digit" }) : undefined;
   return (
     <div style={{ height }}>
       <ResponsiveContainer>
         <BarChart data={data} margin={{ top: 8, right: 4, bottom: 0, left: -24 }} barCategoryGap="28%">
           <CartesianGrid vertical={false} stroke={GRID} />
-          <XAxis dataKey={xKey} tick={AXIS} axisLine={false} tickLine={false} tickFormatter={xFormat} interval="preserveStartEnd" />
+          <XAxis dataKey={xKey} tick={AXIS} axisLine={false} tickLine={false} tickFormatter={fmt} interval="preserveStartEnd" />
           <YAxis tick={AXIS} axisLine={false} tickLine={false} allowDecimals={false} width={40} />
-          <Tooltip content={<TooltipBox unit={unit} labelFormat={xFormat} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
+          <Tooltip content={<TooltipBox unit={unit} labelFormat={fmt} />} cursor={{ fill: "rgba(255,255,255,0.04)" }} />
           <Bar
             dataKey={yKey}
             name={label}

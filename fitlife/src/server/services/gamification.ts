@@ -7,6 +7,9 @@ import { notify } from "./notifications";
 
 export { ACHIEVEMENTS } from "@/lib/catalog";
 
+/** Sessões abaixo deste tempo não contam para XP, conquistas e missões (anti-manipulação). */
+export const MIN_VALID_SESSION_SEC = 300;
+
 export const XP = {
   workoutBase: 50,
   workoutMaxBonus: 30,
@@ -96,7 +99,7 @@ export async function evaluateAchievements(userId: string) {
     if (need(code) && (await cond()) && (await grant(userId, code))) unlocked.push(code);
   };
 
-  const workouts = await db.workoutSession.count({ where: { userId, status: "COMPLETED" } });
+  const workouts = await db.workoutSession.count({ where: { userId, status: "COMPLETED", durationSec: { gte: MIN_VALID_SESSION_SEC } } });
   await check("FIRST_STEP", async () => workouts >= 1);
   await check("DISCIPLINE", async () => workouts >= 20);
   await check("CENTURION", async () => workouts >= 100);
@@ -135,9 +138,9 @@ async function metricValue(userId: string, metric: MissionMetric, from: Date, to
   const toKey = dateKey(to);
   switch (metric) {
     case "WORKOUTS":
-      return db.workoutSession.count({ where: { userId, status: "COMPLETED", startedAt: { gte: from, lte: to } } });
+      return db.workoutSession.count({ where: { userId, status: "COMPLETED", durationSec: { gte: MIN_VALID_SESSION_SEC }, startedAt: { gte: from, lte: to } } });
     case "ROUTINE_COMPLETIONS":
-      return db.workoutSession.count({ where: { userId, status: "COMPLETED", workoutId: { not: null }, startedAt: { gte: from, lte: to } } });
+      return db.workoutSession.count({ where: { userId, status: "COMPLETED", durationSec: { gte: MIN_VALID_SESSION_SEC }, workoutId: { not: null }, startedAt: { gte: from, lte: to } } });
     case "WORKOUT_MINUTES": {
       const agg = await db.workoutSession.aggregate({ where: { userId, status: "COMPLETED", startedAt: { gte: from, lte: to } }, _sum: { durationSec: true } });
       return Math.floor((agg._sum.durationSec ?? 0) / 60);
