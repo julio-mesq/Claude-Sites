@@ -1,0 +1,1012 @@
+// FitLife — esquema relacional (PostgreSQL)
+// Convenções: ids cuid, timestamps em UTC, exclusão em cascata de dados pessoais
+// quando a conta é excluída (LGPD), e SetNull para registros de auditoria/moderação.
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url       = env("DATABASE_URL")
+  // Conexão direta (sem pool) usada pelas migrações. No Neon, é a URL "unpooled".
+  directUrl = env("DATABASE_URL_UNPOOLED")
+}
+
+// ─────────────────────────────── Enums ───────────────────────────────
+
+enum Role {
+  USER
+  PROFESSIONAL
+  MODERATOR
+  ADMIN
+}
+
+enum UserStatus {
+  ACTIVE
+  SUSPENDED
+}
+
+enum Goal {
+  GAIN_MUSCLE
+  LOSE_FAT
+  CONDITIONING
+  STRENGTH
+  HEALTH
+  MAINTAIN
+  MOBILITY
+}
+
+enum ExperienceLevel {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum TrainingLocation {
+  GYM
+  HOME
+  OUTDOOR
+  MIXED
+}
+
+enum Sex {
+  MALE
+  FEMALE
+  OTHER
+  UNDISCLOSED
+}
+
+enum MuscleGroup {
+  CHEST
+  BACK
+  SHOULDERS
+  BICEPS
+  TRICEPS
+  LEGS
+  GLUTES
+  ABS
+  CARDIO
+  MOBILITY
+}
+
+enum Difficulty {
+  BEGINNER
+  INTERMEDIATE
+  ADVANCED
+}
+
+enum SessionStatus {
+  IN_PROGRESS
+  COMPLETED
+  ABANDONED
+}
+
+enum MealType {
+  BREAKFAST
+  LUNCH
+  SNACK
+  DINNER
+  SUPPER
+}
+
+enum TokenType {
+  EMAIL_VERIFY
+  PASSWORD_RESET
+}
+
+enum HabitFrequency {
+  DAILY
+  WEEKLY
+}
+
+enum CalendarEventType {
+  WORKOUT
+  REST
+  GOAL
+  REMINDER
+  APPOINTMENT
+}
+
+enum MissionMetric {
+  WORKOUTS
+  WORKOUT_MINUTES
+  CARDIO_KM
+  MEALS_LOGGED
+  WATER_DAYS
+  HABIT_CHECKINS
+  ROUTINE_COMPLETIONS
+}
+
+enum MissionStatus {
+  ACTIVE
+  COMPLETED
+  FAILED
+  ABANDONED
+}
+
+enum GoalStatus {
+  ACTIVE
+  COMPLETED
+  ARCHIVED
+}
+
+enum Plan {
+  FREE
+  PRO
+  ELITE
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  TRIALING
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+}
+
+enum PaymentStatus {
+  SUCCEEDED
+  FAILED
+  REFUNDED
+  PENDING
+}
+
+enum Visibility {
+  PRIVATE
+  FOLLOWERS
+  PUBLIC
+}
+
+enum ReportStatus {
+  OPEN
+  RESOLVED
+  DISMISSED
+}
+
+enum ReactionType {
+  LIKE
+  FIRE
+  STRONG
+}
+
+enum JourneyKind {
+  FIRST_WORKOUT
+  FIRST_FULL_WEEK
+  PERSONAL_RECORD
+  GOAL_REACHED
+  MEASUREMENT
+  HABIT_STREAK
+  ACHIEVEMENT
+  LEVEL_UP
+  MISSION_COMPLETED
+}
+
+enum AiRole {
+  USER
+  ASSISTANT
+}
+
+// ─────────────────────────────── Identidade ───────────────────────────────
+
+model User {
+  id                String     @id @default(cuid())
+  email             String     @unique
+  name              String
+  passwordHash      String
+  role              Role       @default(USER)
+  status            UserStatus @default(ACTIVE)
+  emailVerifiedAt   DateTime?
+  onboardedAt       DateTime?
+  xp                Int        @default(0)
+  level             Int        @default(1)
+  termsAcceptedAt   DateTime?
+  privacyAcceptedAt DateTime?
+  lastActiveAt      DateTime?
+  createdAt         DateTime   @default(now())
+  updatedAt         DateTime   @updatedAt
+
+  profile          Profile?
+  preferences      UserPreference?
+  sessions         Session[]
+  tokens           VerificationToken[]
+  workouts         Workout[]
+  workoutSessions  WorkoutSession[]
+  customExercises  Exercise[]          @relation("ExerciseAuthor")
+  meals            Meal[]
+  foodItems        FoodItem[]
+  waterLogs        WaterLog[]
+  nutritionTargets NutritionLog[]
+  measurements     BodyMeasurement[]
+  photos           ProgressPhoto[]
+  goals            UserGoal[]
+  habits           Habit[]
+  habitLogs        HabitLog[]
+  events           CalendarEvent[]
+  achievements     UserAchievement[]
+  missionProgress  MissionProgress[]
+  notifications    Notification[]
+  subscription     Subscription?
+  payments         Payment[]
+  posts            CommunityPost[]
+  comments         Comment[]
+  reactions        Reaction[]
+  reportsFiled     Report[]            @relation("Reporter")
+  auditLogs        AuditLog[]
+  xpEvents         XpEvent[]
+  recoveryLogs     RecoveryLog[]
+  journey          JourneyMilestone[]
+  aiMessages       AiMessage[]
+  following        Follow[]            @relation("Follower")
+  followers        Follow[]            @relation("Following")
+  blocking         Block[]             @relation("Blocker")
+  blockedBy        Block[]             @relation("Blocked")
+  personalRecords  PersonalRecord[]
+  shoppingItems    ShoppingListItem[]
+  recipes          Recipe[]
+
+  @@index([createdAt])
+  @@index([role])
+  @@map("users")
+}
+
+model Profile {
+  userId            String            @id
+  user              User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  birthDate         DateTime?
+  sex               Sex               @default(UNDISCLOSED)
+  heightCm          Float?
+  weightKg          Float?
+  goal              Goal?
+  experience        ExperienceLevel?
+  trainingDaysPerWeek Int?
+  location          TrainingLocation?
+  equipment         String[]
+  sessionMinutes    Int?
+  dietaryPreferences String[]
+  dietaryRestrictions String[]
+  activityPreferences String[]
+  healthNotes       String?
+  hasHealthConditions Boolean          @default(false)
+  avatarPath        String?
+  bio               String?
+  username          String?           @unique
+  updatedAt         DateTime          @updatedAt
+
+  @@map("profiles")
+}
+
+model UserPreference {
+  userId              String     @id
+  user                User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  reducedMotion       Boolean    @default(false)
+  units               String     @default("metric")
+  weeklyWorkoutTarget Int        @default(3)
+  dailyWaterMl        Int        @default(2500)
+  communityEnabled    Boolean    @default(false)
+  profileVisibility   Visibility @default(PRIVATE)
+  showInRanking       Boolean    @default(false)
+  emailNotifications  Boolean    @default(true)
+  reminderNotifications Boolean  @default(true)
+  aiUseHistory        Boolean    @default(true)
+  marketingConsent    Boolean    @default(false)
+  updatedAt           DateTime   @updatedAt
+
+  @@map("user_preferences")
+}
+
+model Session {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  tokenHash  String   @unique
+  userAgent  String?
+  ip         String?
+  createdAt  DateTime @default(now())
+  lastSeenAt DateTime @default(now())
+  expiresAt  DateTime
+
+  @@index([userId])
+  @@index([expiresAt])
+  @@map("sessions")
+}
+
+model VerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      TokenType
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, type])
+  @@map("verification_tokens")
+}
+
+model RateLimit {
+  key       String   @id
+  count     Int
+  resetAt   DateTime
+
+  @@index([resetAt])
+  @@map("rate_limits")
+}
+
+// ─────────────────────────────── Treinamento ───────────────────────────────
+
+model Exercise {
+  id           String      @id @default(cuid())
+  slug         String      @unique
+  name         String
+  muscleGroup  MuscleGroup
+  secondaryMuscles MuscleGroup[]
+  equipment    String
+  difficulty   Difficulty
+  description  String
+  instructions String[]
+  cautions     String[]
+  defaultSets  Int         @default(3)
+  defaultReps  String      @default("10-12")
+  defaultRestSec Int       @default(60)
+  isCardio     Boolean     @default(false)
+  mediaPath    String?
+  isPublished  Boolean     @default(true)
+  authorId     String?
+  author       User?       @relation("ExerciseAuthor", fields: [authorId], references: [id], onDelete: SetNull)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  workoutItems WorkoutExercise[]
+  sets         WorkoutSet[]
+  records      PersonalRecord[]
+
+  @@index([muscleGroup])
+  @@index([isPublished])
+  @@map("exercises")
+}
+
+model Workout {
+  id           String    @id @default(cuid())
+  userId       String
+  user         User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name         String
+  description  String?
+  focus        MuscleGroup?
+  isTemplate   Boolean   @default(false)
+  estimatedMinutes Int   @default(45)
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  exercises    WorkoutExercise[]
+  sessions     WorkoutSession[]
+  events       CalendarEvent[]
+
+  @@index([userId, archivedAt])
+  @@map("workouts")
+}
+
+model WorkoutExercise {
+  id         String   @id @default(cuid())
+  workoutId  String
+  workout    Workout  @relation(fields: [workoutId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  position   Int
+  sets       Int      @default(3)
+  reps       String   @default("10")
+  loadKg     Float?
+  restSec    Int      @default(60)
+  notes      String?
+
+  @@index([workoutId, position])
+  @@map("workout_exercises")
+}
+
+model WorkoutSession {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  workoutId   String?
+  workout     Workout?      @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  name        String
+  status      SessionStatus @default(IN_PROGRESS)
+  startedAt   DateTime      @default(now())
+  endedAt     DateTime?
+  durationSec Int?
+  totalVolumeKg Float       @default(0)
+  cardioKm    Float         @default(0)
+  perceivedEffort Int?
+  notes       String?
+  xpAwarded   Int           @default(0)
+
+  sets        WorkoutSet[]
+
+  @@index([userId, startedAt])
+  @@index([userId, status])
+  @@map("workout_sessions")
+}
+
+model WorkoutSet {
+  id          String         @id @default(cuid())
+  sessionId   String
+  session     WorkoutSession @relation(fields: [sessionId], references: [id], onDelete: Cascade)
+  exerciseId  String
+  exercise    Exercise       @relation(fields: [exerciseId], references: [id], onDelete: Restrict)
+  setNumber   Int
+  reps        Int?
+  loadKg      Float?
+  durationSec Int?
+  distanceKm  Float?
+  completedAt DateTime       @default(now())
+
+  @@index([sessionId])
+  @@index([exerciseId])
+  @@map("workout_sets")
+}
+
+model PersonalRecord {
+  id         String   @id @default(cuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  exerciseId String
+  exercise   Exercise @relation(fields: [exerciseId], references: [id], onDelete: Cascade)
+  loadKg     Float
+  reps       Int
+  estimated1Rm Float
+  achievedAt DateTime @default(now())
+
+  @@unique([userId, exerciseId])
+  @@map("personal_records")
+}
+
+// ─────────────────────────────── Nutrição ───────────────────────────────
+
+/// Metas nutricionais diárias estimadas (não são prescrição clínica).
+model NutritionLog {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date        DateTime @db.Date
+  calorieTarget Int
+  proteinTarget Int
+  carbsTarget Int
+  fatTarget   Int
+  notes       String?
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, date])
+  @@map("nutrition_logs")
+}
+
+/// Alimento da biblioteca do usuário (registro manual) ou base pública (userId nulo, curado por admins).
+model FoodItem {
+  id         String   @id @default(cuid())
+  userId     String?
+  user       User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name       String
+  brand      String?
+  servingQty Float    @default(100)
+  servingUnit String  @default("g")
+  calories   Float
+  proteinG   Float
+  carbsG     Float
+  fatG       Float
+  source     String   @default("user")
+  isFavorite Boolean  @default(false)
+  createdAt  DateTime @default(now())
+
+  entries    MealEntry[]
+
+  @@index([userId, name])
+  @@map("food_items")
+}
+
+model Meal {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime  @db.Date
+  type      MealType
+  name      String?
+  isCustomTemplate Boolean @default(false)
+  createdAt DateTime  @default(now())
+
+  entries   MealEntry[]
+
+  @@index([userId, date])
+  @@map("meals")
+}
+
+model MealEntry {
+  id         String    @id @default(cuid())
+  mealId     String
+  meal       Meal      @relation(fields: [mealId], references: [id], onDelete: Cascade)
+  foodItemId String?
+  foodItem   FoodItem? @relation(fields: [foodItemId], references: [id], onDelete: SetNull)
+  name       String
+  quantity   Float
+  unit       String
+  calories   Float
+  proteinG   Float
+  carbsG     Float
+  fatG       Float
+  createdAt  DateTime  @default(now())
+
+  @@index([mealId])
+  @@map("meal_entries")
+}
+
+model WaterLog {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  amountMl  Int
+  createdAt DateTime @default(now())
+
+  @@index([userId, date])
+  @@map("water_logs")
+}
+
+model Recipe {
+  id          String   @id @default(cuid())
+  userId      String?
+  user        User?    @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  description String?
+  ingredients String[]
+  steps       String[]
+  servings    Int      @default(1)
+  calories    Float?
+  proteinG    Float?
+  carbsG      Float?
+  fatG        Float?
+  tags        String[]
+  createdAt   DateTime @default(now())
+
+  @@index([userId])
+  @@map("recipes")
+}
+
+model ShoppingListItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name      String
+  quantity  String?
+  checked   Boolean  @default(false)
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@map("shopping_list_items")
+}
+
+// ─────────────────────────────── Evolução ───────────────────────────────
+
+model BodyMeasurement {
+  id           String   @id @default(cuid())
+  userId       String
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  measuredAt   DateTime
+  weightKg     Float?
+  heightCm     Float?
+  bodyFatPct   Float?
+  bodyFatMethod String?
+  chestCm      Float?
+  waistCm      Float?
+  hipsCm       Float?
+  armCm        Float?
+  thighCm      Float?
+  calfCm       Float?
+  neckCm       Float?
+  notes        String?
+  createdAt    DateTime @default(now())
+
+  @@index([userId, measuredAt])
+  @@map("body_measurements")
+}
+
+model ProgressPhoto {
+  id          String     @id @default(cuid())
+  userId      String
+  user        User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  storagePath String
+  mimeType    String
+  sizeBytes   Int
+  pose        String     @default("front")
+  takenAt     DateTime
+  visibility  Visibility @default(PRIVATE)
+  notes       String?
+  createdAt   DateTime   @default(now())
+
+  @@index([userId, takenAt])
+  @@map("progress_photos")
+}
+
+model UserGoal {
+  id           String     @id @default(cuid())
+  userId       String
+  user         User       @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title        String
+  metric       String
+  unit         String
+  startValue   Float
+  targetValue  Float
+  currentValue Float
+  deadline     DateTime?
+  status       GoalStatus @default(ACTIVE)
+  completedAt  DateTime?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([userId, status])
+  @@map("goals")
+}
+
+// ─────────────────────────────── Rotina ───────────────────────────────
+
+model Habit {
+  id          String         @id @default(cuid())
+  userId      String
+  user        User           @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  icon        String         @default("check")
+  color       String         @default("#B6FF3B")
+  frequency   HabitFrequency @default(DAILY)
+  targetPerPeriod Int        @default(1)
+  archivedAt  DateTime?
+  createdAt   DateTime       @default(now())
+
+  logs        HabitLog[]
+
+  @@index([userId, archivedAt])
+  @@map("habits")
+}
+
+model HabitLog {
+  id        String   @id @default(cuid())
+  habitId   String
+  habit     Habit    @relation(fields: [habitId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date      DateTime @db.Date
+  createdAt DateTime @default(now())
+
+  @@unique([habitId, date])
+  @@index([userId, date])
+  @@map("habit_logs")
+}
+
+model CalendarEvent {
+  id          String            @id @default(cuid())
+  userId      String
+  user        User              @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title       String
+  type        CalendarEventType
+  startsAt    DateTime
+  endsAt      DateTime?
+  allDay      Boolean           @default(false)
+  workoutId   String?
+  workout     Workout?          @relation(fields: [workoutId], references: [id], onDelete: SetNull)
+  completedAt DateTime?
+  notes       String?
+  remindAt    DateTime?
+  reminderSentAt DateTime?
+  createdAt   DateTime          @default(now())
+
+  @@index([userId, startsAt])
+  @@index([remindAt, reminderSentAt])
+  @@map("calendar_events")
+}
+
+model RecoveryLog {
+  id             String   @id @default(cuid())
+  userId         String
+  user           User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  date           DateTime @db.Date
+  sleepHours     Float
+  fatigue        Int
+  soreness       Int
+  recoveryFeeling Int
+  isRestDay      Boolean  @default(false)
+  notes          String?
+  createdAt      DateTime @default(now())
+
+  @@unique([userId, date])
+  @@map("recovery_logs")
+}
+
+// ─────────────────────────────── Gamificação ───────────────────────────────
+
+model Achievement {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  description String
+  icon        String
+  xpReward    Int      @default(50)
+  tier        String   @default("bronze")
+  createdAt   DateTime @default(now())
+
+  users       UserAchievement[]
+
+  @@map("achievements")
+}
+
+model UserAchievement {
+  id            String      @id @default(cuid())
+  userId        String
+  user          User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  achievementId String
+  achievement   Achievement @relation(fields: [achievementId], references: [id], onDelete: Cascade)
+  unlockedAt    DateTime    @default(now())
+
+  @@unique([userId, achievementId])
+  @@map("user_achievements")
+}
+
+/// Livro-razão de XP: toda pontuação vem de um evento do servidor (idempotente via sourceKey).
+model XpEvent {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  amount    Int
+  reason    String
+  sourceKey String
+  createdAt DateTime @default(now())
+
+  @@unique([userId, sourceKey])
+  @@index([userId, createdAt])
+  @@map("xp_events")
+}
+
+model Mission {
+  id           String        @id @default(cuid())
+  code         String        @unique
+  name         String
+  description  String
+  metric       MissionMetric
+  targetValue  Float
+  durationDays Int
+  xpReward     Int
+  icon         String        @default("target")
+  isActive     Boolean       @default(true)
+  isCommunity  Boolean       @default(false)
+  createdAt    DateTime      @default(now())
+
+  progress     MissionProgress[]
+
+  @@map("missions")
+}
+
+model MissionProgress {
+  id          String        @id @default(cuid())
+  userId      String
+  user        User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  missionId   String
+  mission     Mission       @relation(fields: [missionId], references: [id], onDelete: Cascade)
+  startedAt   DateTime      @default(now())
+  endsAt      DateTime
+  progress    Float         @default(0)
+  status      MissionStatus @default(ACTIVE)
+  completedAt DateTime?
+
+  @@index([userId, status])
+  @@index([missionId, status])
+  @@map("mission_progress")
+}
+
+model JourneyMilestone {
+  id          String      @id @default(cuid())
+  userId      String
+  user        User        @relation(fields: [userId], references: [id], onDelete: Cascade)
+  kind        JourneyKind
+  title       String
+  description String
+  data        Json?
+  sourceKey   String
+  occurredAt  DateTime    @default(now())
+
+  @@unique([userId, sourceKey])
+  @@index([userId, occurredAt])
+  @@map("journey_milestones")
+}
+
+// ─────────────────────────────── Notificações ───────────────────────────────
+
+model Notification {
+  id        String    @id @default(cuid())
+  userId    String
+  user      User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      String
+  title     String
+  body      String
+  href      String?
+  readAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([userId, readAt, createdAt])
+  @@map("notifications")
+}
+
+// ─────────────────────────────── Fit AI ───────────────────────────────
+
+model AiMessage {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  role      AiRole
+  content   String
+  provider  String
+  createdAt DateTime @default(now())
+
+  @@index([userId, createdAt])
+  @@map("ai_messages")
+}
+
+// ─────────────────────────────── Comercial ───────────────────────────────
+
+model Subscription {
+  id                   String             @id @default(cuid())
+  userId               String             @unique
+  user                 User               @relation(fields: [userId], references: [id], onDelete: Cascade)
+  plan                 Plan               @default(FREE)
+  status               SubscriptionStatus @default(ACTIVE)
+  provider             String             @default("none")
+  providerCustomerId   String?            @unique
+  providerSubscriptionId String?          @unique
+  currentPeriodEnd     DateTime?
+  cancelAtPeriodEnd    Boolean            @default(false)
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+
+  @@map("subscriptions")
+}
+
+model Payment {
+  id                String        @id @default(cuid())
+  userId            String
+  user              User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  provider          String
+  providerPaymentId String        @unique
+  amountCents       Int
+  currency          String
+  status            PaymentStatus
+  plan              Plan
+  createdAt         DateTime      @default(now())
+
+  @@index([userId])
+  @@map("payments")
+}
+
+model WebhookEvent {
+  id         String   @id
+  provider   String
+  type       String
+  processedAt DateTime @default(now())
+
+  @@map("webhook_events")
+}
+
+// ─────────────────────────────── Comunidade ───────────────────────────────
+
+model CommunityPost {
+  id         String     @id @default(cuid())
+  authorId   String
+  author     User       @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content    String
+  visibility Visibility @default(PUBLIC)
+  achievementCode String?
+  hiddenAt   DateTime?
+  hiddenReason String?
+  createdAt  DateTime   @default(now())
+  updatedAt  DateTime   @updatedAt
+
+  comments   Comment[]
+  reactions  Reaction[]
+  reports    Report[]
+
+  @@index([createdAt])
+  @@index([authorId, createdAt])
+  @@map("community_posts")
+}
+
+model Comment {
+  id        String        @id @default(cuid())
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  authorId  String
+  author    User          @relation(fields: [authorId], references: [id], onDelete: Cascade)
+  content   String
+  hiddenAt  DateTime?
+  createdAt DateTime      @default(now())
+
+  reports   Report[]
+
+  @@index([postId, createdAt])
+  @@map("comments")
+}
+
+model Reaction {
+  id        String        @id @default(cuid())
+  postId    String
+  post      CommunityPost @relation(fields: [postId], references: [id], onDelete: Cascade)
+  userId    String
+  user      User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  type      ReactionType  @default(LIKE)
+  createdAt DateTime      @default(now())
+
+  @@unique([postId, userId])
+  @@map("reactions")
+}
+
+model Follow {
+  followerId  String
+  follower    User     @relation("Follower", fields: [followerId], references: [id], onDelete: Cascade)
+  followingId String
+  following   User     @relation("Following", fields: [followingId], references: [id], onDelete: Cascade)
+  createdAt   DateTime @default(now())
+
+  @@id([followerId, followingId])
+  @@index([followingId])
+  @@map("follows")
+}
+
+model Block {
+  blockerId String
+  blocker   User     @relation("Blocker", fields: [blockerId], references: [id], onDelete: Cascade)
+  blockedId String
+  blocked   User     @relation("Blocked", fields: [blockedId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@id([blockerId, blockedId])
+  @@map("blocks")
+}
+
+model Report {
+  id         String         @id @default(cuid())
+  reporterId String?
+  reporter   User?          @relation("Reporter", fields: [reporterId], references: [id], onDelete: SetNull)
+  postId     String?
+  post       CommunityPost? @relation(fields: [postId], references: [id], onDelete: Cascade)
+  commentId  String?
+  comment    Comment?       @relation(fields: [commentId], references: [id], onDelete: Cascade)
+  reason     String
+  details    String?
+  status     ReportStatus   @default(OPEN)
+  resolvedById String?
+  resolvedAt DateTime?
+  createdAt  DateTime       @default(now())
+
+  @@index([status, createdAt])
+  @@map("reports")
+}
+
+// ─────────────────────────────── Auditoria e configuração ───────────────────────────────
+
+model AuditLog {
+  id        String   @id @default(cuid())
+  actorId   String?
+  actor     User?    @relation(fields: [actorId], references: [id], onDelete: SetNull)
+  action    String
+  target    String?
+  meta      Json?
+  ip        String?
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([actorId, createdAt])
+  @@index([action])
+  @@map("audit_logs")
+}
+
+model AppSetting {
+  key       String   @id
+  value     Json
+  updatedAt DateTime @updatedAt
+
+  @@map("app_settings")
+}

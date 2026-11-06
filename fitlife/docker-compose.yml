@@ -1,0 +1,27 @@
+# Ambiente local completo: PostgreSQL + aplicação. Uso: docker compose up --build
+services:
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: fitlife
+      POSTGRES_PASSWORD: fitlife_dev
+      POSTGRES_DB: fitlife
+    volumes: [pgdata:/var/lib/postgresql/data]
+    ports: ["5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U fitlife"]
+      interval: 5s
+      retries: 10
+  app:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+    env_file: .env
+    environment:
+      DATABASE_URL: postgresql://fitlife:fitlife_dev@db:5432/fitlife?schema=public
+      DATABASE_URL_UNPOOLED: postgresql://fitlife:fitlife_dev@db:5432/fitlife?schema=public
+    ports: ["3000:3000"]
+    volumes: [uploads:/app/storage]
+volumes:
+  pgdata:
+  uploads:

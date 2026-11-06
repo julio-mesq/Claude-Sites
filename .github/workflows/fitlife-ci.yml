@@ -1,0 +1,52 @@
+name: FitLife CI
+
+on:
+  push:
+    paths: ["fitlife/**", ".github/workflows/fitlife-ci.yml"]
+  pull_request:
+    paths: ["fitlife/**", ".github/workflows/fitlife-ci.yml"]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: fitlife
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: fitlife
+          POSTGRES_PASSWORD: fitlife_dev
+          POSTGRES_DB: fitlife
+        ports: ["5432:5432"]
+        options: >-
+          --health-cmd "pg_isready -U fitlife" --health-interval 5s --health-retries 10
+    env:
+      DATABASE_URL: postgresql://fitlife:fitlife_dev@localhost:5432/fitlife?schema=public
+      DATABASE_URL_UNPOOLED: postgresql://fitlife:fitlife_dev@localhost:5432/fitlife?schema=public
+      AUTH_SECRET: ci-only-secret-with-at-least-thirty-two-characters
+      APP_URL: http://localhost:3100
+      FITLIFE_SILENT_LOGS: "1"
+      NEXT_TELEMETRY_DISABLED: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: fitlife/package-lock.json
+      - run: npm ci
+      - run: npx prisma migrate deploy
+      - run: npm run db:seed
+      - run: npx tsc --noEmit
+      - run: npx next lint
+      - run: npm test
+      - run: npx next build
+      - run: npx playwright install --with-deps chromium
+      - name: API + E2E
+        run: |
+          npx next start -p 3100 &
+          npx wait-on http://localhost:3100/api/v1/health
+          TEST_BASE_URL=http://localhost:3100 npm run test:api
+          E2E_PORT=3100 E2E_NO_SERVER=1 npm run test:e2e

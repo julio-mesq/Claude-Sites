@@ -1,0 +1,148 @@
+@import "tailwindcss";
+
+@theme {
+  --color-ink-950: #080a0a;
+  --color-ink-900: #101414;
+  --color-ink-800: #181f1e;
+  --color-ink-700: #222b29;
+  --color-ink-600: #2e3a37;
+  --color-neon: #b6ff3b;
+  --color-neon-600: #77d63b;
+  --color-neon-900: #2b3d12;
+  --color-snow: #f4f7f3;
+  --color-mist: #939b96;
+  --color-mist-700: #5d6560;
+  --color-danger: #ff5c5c;
+  --color-warning: #ffb83b;
+  --color-info: #3bc8ff;
+  --color-violet: #9b8cff;
+
+  --font-sans: "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Sora Variable", "Inter Variable", ui-sans-serif, system-ui, sans-serif;
+
+  --radius-xl2: 1.25rem;
+  --shadow-glow: 0 0 0 1px rgb(182 255 59 / 0.25), 0 8px 30px -8px rgb(182 255 59 / 0.35);
+  --shadow-card: 0 1px 0 0 rgb(255 255 255 / 0.04) inset, 0 20px 40px -24px rgb(0 0 0 / 0.8);
+
+  --animate-shimmer: shimmer 1.6s linear infinite;
+  --animate-float: float 7s ease-in-out infinite;
+  --animate-pulse-ring: pulse-ring 2.4s cubic-bezier(0.2, 0.6, 0.3, 1) infinite;
+
+  @keyframes shimmer {
+    from { background-position: -200% 0; }
+    to { background-position: 200% 0; }
+  }
+  @keyframes float {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-10px); }
+  }
+  @keyframes pulse-ring {
+    0% { transform: scale(0.95); opacity: 0.6; }
+    80%, 100% { transform: scale(1.25); opacity: 0; }
+  }
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+  body {
+    background: var(--color-ink-950);
+    color: var(--color-snow);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+  h1, h2, h3, h4 {
+    font-family: var(--font-display);
+    letter-spacing: -0.02em;
+  }
+  ::selection {
+    background: rgb(182 255 59 / 0.3);
+    color: var(--color-snow);
+  }
+  :focus-visible {
+    outline: 2px solid var(--color-neon);
+    outline-offset: 2px;
+    border-radius: 6px;
+  }
+  input[type="number"]::-webkit-inner-spin-button,
+  input[type="number"]::-webkit-outer-spin-button {
+    -webkit-appearance: none;
+    margin: 0;
+  }
+  input[type="number"] { -moz-appearance: textfield; }
+  * {
+    scrollbar-width: thin;
+    scrollbar-color: var(--color-ink-600) transparent;
+  }
+}
+
+@layer components {
+  .glass {
+    background: linear-gradient(180deg, rgb(24 31 30 / 0.72), rgb(16 20 20 / 0.72));
+    border: 1px solid rgb(255 255 255 / 0.06);
+    box-shadow: var(--shadow-card);
+    backdrop-filter: blur(16px) saturate(140%);
+    -webkit-backdrop-filter: blur(16px) saturate(140%);
+  }
+  .glass-strong {
+    background: linear-gradient(180deg, rgb(28 36 34 / 0.9), rgb(16 20 20 / 0.92));
+    border: 1px solid rgb(255 255 255 / 0.08);
+    backdrop-filter: blur(24px);
+    -webkit-backdrop-filter: blur(24px);
+  }
+  .text-gradient {
+    background: linear-gradient(100deg, #f4f7f3 0%, #b6ff3b 55%, #77d63b 100%);
+    -webkit-background-clip: text;
+    background-clip: text;
+    color: transparent;
+  }
+  .grid-bg {
+    background-image:
+      linear-gradient(rgb(255 255 255 / 0.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgb(255 255 255 / 0.035) 1px, transparent 1px);
+    background-size: 56px 56px;
+    mask-image: radial-gradient(ellipse at center, black 30%, transparent 75%);
+  }
+  .noise::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    opacity: 0.035;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='120' height='120'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.9' numOctaves='2'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  }
+  .skeleton {
+    background: linear-gradient(90deg, rgb(255 255 255 / 0.04) 25%, rgb(255 255 255 / 0.09) 50%, rgb(255 255 255 / 0.04) 75%);
+    background-size: 200% 100%;
+    animation: var(--animate-shimmer);
+  }
+  .prose-fit p { margin: 0.4rem 0; line-height: 1.6; }
+  .prose-fit ul, .prose-fit ol { margin: 0.4rem 0 0.4rem 1.2rem; }
+  .prose-fit ul { list-style: disc; }
+  .prose-fit ol { list-style: decimal; }
+  .prose-fit li { margin: 0.2rem 0; }
+  .prose-fit strong { color: var(--color-snow); font-weight: 600; }
+  .safe-bottom { padding-bottom: max(0.5rem, env(safe-area-inset-bottom)); }
+}
+
+/* Preferência de movimento reduzido: do sistema OU definida pelo usuário no FitLife. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}
+html[data-reduced-motion="true"] *, html[data-reduced-motion="true"] *::before, html[data-reduced-motion="true"] *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
