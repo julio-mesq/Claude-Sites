@@ -14,7 +14,8 @@ import { appSettings } from "./app-settings";
 
 export async function register(input: { name: string; email: string; password: string }, ip: string | null) {
   if (!(await appSettings()).signupEnabled) throw Errors.forbidden("Novos cadastros estão temporariamente pausados.");
-  await rateLimit(`register:${ip ?? "unknown"}`, 5, 3600);
+  // 10 cadastros por hora por IP: protege contra abuso sem bloquear famílias na mesma rede.
+  await rateLimit(`signup:${ip ?? "unknown"}`, 10, 3600);
   const exists = await db.user.findUnique({ where: { email: input.email }, select: { id: true } });
   if (exists) throw Errors.conflict("Já existe uma conta com este e-mail.");
   const passwordHash = await hashPassword(input.password);

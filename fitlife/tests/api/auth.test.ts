@@ -147,3 +147,17 @@ describe("segurança HTTP", () => {
     void c;
   });
 });
+
+describe("limite de cadastro", () => {
+  it("cada tentativa conta uma única vez e permite vários cadastros na mesma rede", async () => {
+    const c = new Client();
+    for (let i = 0; i < 8; i++) {
+      const r = await c.post("/auth/register", { name: "Pessoa Rede", email: uniqueEmail(`net${i}`), password: PASSWORD, confirmPassword: PASSWORD, acceptTerms: true });
+      expect(r.status, `cadastro ${i + 1}`).toBe(200);
+      c.cookie = "";
+    }
+    const extra = [];
+    for (let i = 0; i < 3; i++) extra.push((await c.post("/auth/register", { name: "Pessoa Rede", email: uniqueEmail(`netx${i}`), password: PASSWORD, confirmPassword: PASSWORD, acceptTerms: true })).status);
+    expect(extra).toContain(429);
+  });
+});
