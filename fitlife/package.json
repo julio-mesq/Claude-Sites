@@ -19,7 +19,8 @@
     "postinstall": "prisma generate",
     "test:api": "VITEST_API=1 vitest run tests/api",
     "test:all": "VITEST_API=1 vitest run",
-    "check": "tsc --noEmit && next lint && vitest run tests/unit"
+    "check": "tsc --noEmit && next lint && vitest run tests/unit",
+    "vercel-build": "prisma generate && prisma migrate deploy && tsx prisma/seed.ts && next build"
   },
   "prisma": {
     "seed": "tsx prisma/seed.ts"

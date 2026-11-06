@@ -19,6 +19,7 @@ services:
     env_file: .env
     environment:
       DATABASE_URL: postgresql://fitlife:fitlife_dev@db:5432/fitlife?schema=public
+      DATABASE_URL_UNPOOLED: postgresql://fitlife:fitlife_dev@db:5432/fitlife?schema=public
     ports: ["3000:3000"]
     volumes: [uploads:/app/storage]
 volumes:

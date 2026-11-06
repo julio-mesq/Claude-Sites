@@ -24,6 +24,7 @@ jobs:
           --health-cmd "pg_isready -U fitlife" --health-interval 5s --health-retries 10
     env:
       DATABASE_URL: postgresql://fitlife:fitlife_dev@localhost:5432/fitlife?schema=public
+      DATABASE_URL_UNPOOLED: postgresql://fitlife:fitlife_dev@localhost:5432/fitlife?schema=public
       AUTH_SECRET: ci-only-secret-with-at-least-thirty-two-characters
       APP_URL: http://localhost:3100
       FITLIFE_SILENT_LOGS: "1"

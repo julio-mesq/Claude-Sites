@@ -43,7 +43,10 @@ async function main() {
 
   const email = (process.env.SEED_ADMIN_EMAIL ?? "").toLowerCase().trim();
   const password = process.env.SEED_ADMIN_PASSWORD ?? "";
-  if (email && password) {
+  // Em produção, nunca cria administrador com a senha de exemplo publicada no repositório.
+  const insecure = password === "Admin@FitLife2026" && (process.env.NODE_ENV === "production" || !!process.env.VERCEL);
+  if (insecure) console.warn("SEED_ADMIN_PASSWORD é a senha de exemplo; administrador não criado. Defina uma senha forte.");
+  if (email && password && !insecure) {
     const existing = await db.user.findUnique({ where: { email } });
     if (!existing) {
       await db.user.create({

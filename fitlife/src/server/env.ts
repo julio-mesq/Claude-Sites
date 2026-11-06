@@ -20,7 +20,14 @@ const schema = z.object({
   STRIPE_PRICE_ELITE: z.string().optional().default(""),
 });
 
-const parsed = schema.safeParse(process.env);
+// Na Vercel, usa o domínio de produção automaticamente quando APP_URL não foi definido.
+const vercelUrl = process.env.VERCEL_PROJECT_PRODUCTION_URL ?? process.env.VERCEL_URL;
+const parsed = schema.safeParse({
+  ...process.env,
+  APP_URL: process.env.APP_URL || (vercelUrl ? `https://${vercelUrl}` : undefined),
+  // O disco da Vercel é somente leitura (exceto /tmp): uploads ficam temporários até configurar armazenamento de objetos.
+  STORAGE_DIR: process.env.STORAGE_DIR || (process.env.VERCEL ? "/tmp/fitlife-storage" : undefined),
+});
 if (!parsed.success) {
   // Falha cedo e de forma explícita: configuração inválida não deve subir silenciosamente.
   console.error("❌ Variáveis de ambiente inválidas:", parsed.error.flatten().fieldErrors);
