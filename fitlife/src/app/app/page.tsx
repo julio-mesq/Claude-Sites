@@ -39,7 +39,7 @@ export default async function DashboardPage({ searchParams }: { searchParams: Pr
               {greeting()}, <span className="text-gradient">{d.user.firstName}</span>
             </h1>
             <p className="mt-2 text-sm text-mist">
-              {d.stats.weekWorkouts >= d.stats.weeklyTarget ? "Meta semanal batida. Excelente trabalho!" : `Faltam ${d.stats.weeklyTarget - d.stats.weekWorkouts} treino(s) para sua meta da semana.`}
+              {d.stats.weekWorkouts >= d.stats.weeklyTarget ? "Meta semanal batida. Excelente trabalho!" : (() => { const left = d.stats.weeklyTarget - d.stats.weekWorkouts; return left === 1 ? "Falta 1 treino para sua meta da semana." : `Faltam ${left} treinos para sua meta da semana.`; })()}
             </p>
           </div>
           <div className="w-full max-w-xs">
