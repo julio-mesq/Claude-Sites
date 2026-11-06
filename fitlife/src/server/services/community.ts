@@ -198,3 +198,31 @@ export async function communityStats(userId: string) {
   ]);
   return { followers, following, posts };
 }
+
+/** Perfil na comunidade, respeitando a visibilidade escolhida pelo dono (PRIVATE, FOLLOWERS, PUBLIC). */
+export async function publicProfile(viewerId: string, targetId: string) {
+  await assertCommunityAccess(viewerId, false);
+  if ((await blockedIds(viewerId)).includes(targetId)) throw Errors.notFound("Perfil");
+  const u = await db.user.findFirst({
+    where: { id: targetId, status: "ACTIVE", preferences: { communityEnabled: true } },
+    select: { id: true, name: true, level: true, createdAt: true, preferences: { select: { profileVisibility: true } }, profile: { select: { username: true, bio: true, avatarPath: true } } },
+  });
+  if (!u) throw Errors.notFound("Perfil");
+  const isSelf = viewerId === targetId;
+  const follows = !!(await db.follow.findUnique({ where: { followerId_followingId: { followerId: viewerId, followingId: targetId } } }));
+  const vis = u.preferences?.profileVisibility ?? "PRIVATE";
+  const canView = isSelf || vis === "PUBLIC" || (vis === "FOLLOWERS" && follows);
+  const base = { id: u.id, name: u.profile?.username ? `@${u.profile.username}` : u.name, hasAvatar: !!u.profile?.avatarPath, isSelf, follows, visibility: vis, canView };
+  if (!canView) return { ...base, level: null, bio: null, since: null, stats: null, achievements: [], posts: [] };
+  const [stats, achievements, posts] = await Promise.all([
+    communityStats(targetId),
+    db.userAchievement.findMany({ where: { userId: targetId }, include: { achievement: { select: { code: true, name: true, tier: true } } }, orderBy: { unlockedAt: "desc" } }),
+    db.communityPost.findMany({
+      where: { authorId: targetId, hiddenAt: null, ...(isSelf || follows ? {} : { visibility: "PUBLIC" }) },
+      orderBy: { createdAt: "desc" },
+      take: 20,
+      select: { id: true, content: true, createdAt: true, _count: { select: { reactions: true, comments: { where: { hiddenAt: null } } } } },
+    }),
+  ]);
+  return { ...base, level: u.level, bio: u.profile?.bio ?? null, since: u.createdAt, stats, achievements: achievements.map((a) => a.achievement), posts };
+}

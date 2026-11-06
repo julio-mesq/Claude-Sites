@@ -1,5 +1,6 @@
 "use client";
 
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { Ban, Flag, Heart, Medal, MessageCircle, MoreHorizontal, Send, Shield, Trash2, UserPlus, Users } from "lucide-react";
@@ -133,7 +134,7 @@ export function CommunityApp({ enabled, verified, stats, achievements }: { enabl
                     <Avatar name={p.author.name} has={p.author.hasAvatar} userId={p.author.id} size={40} />
                     <div>
                       <div className="flex items-center gap-2 text-sm font-semibold">
-                        {p.author.name} <Badge>Nv {p.author.level}</Badge>
+                        <Link href={`/app/community/u/${p.author.id}`} className="hover:text-neon">{p.author.name}</Link> <Badge>Nv {p.author.level}</Badge>
                       </div>
                       <div className="text-xs text-mist">{ago(p.createdAt)}{p.visibility === "FOLLOWERS" && " · seguidores"}</div>
                     </div>

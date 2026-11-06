@@ -227,3 +227,19 @@ describe("comunidade e Fit AI", () => {
     expect((await A.c.post("/ai/chat", { message: "Mais uma" })).status).toBe(429);
   });
 });
+
+describe("perfil público da comunidade", () => {
+  it("respeita a visibilidade escolhida", async () => {
+    const owner = await newUser("vis");
+    const viewer = await newUser("viewer");
+    for (const u of [owner, viewer]) await u.c.patch("/profile/preferences", { communityEnabled: true });
+    const priv = await viewer.c.get(`/community/users/${owner.user.id}/profile`);
+    expect(priv.status).toBe(200);
+    expect(priv.data.canView).toBe(false);
+    expect(priv.data.stats).toBeNull();
+    await owner.c.patch("/profile/preferences", { profileVisibility: "FOLLOWERS" });
+    expect((await viewer.c.get(`/community/users/${owner.user.id}/profile`)).data.canView).toBe(false);
+    await viewer.c.post(`/community/users/${owner.user.id}/follow`);
+    expect((await viewer.c.get(`/community/users/${owner.user.id}/profile`)).data.canView).toBe(true);
+  });
+});

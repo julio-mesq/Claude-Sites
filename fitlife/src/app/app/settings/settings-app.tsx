@@ -54,8 +54,7 @@ export function SettingsApp({ prefs: initial, sessions: initialSessions, blocked
         <CardHeader title="Preferências" icon={<SlidersHorizontal className="h-4 w-4" />} />
         <div className="divide-y divide-white/5 px-5 pb-3">
           <Switch checked={prefs.reducedMotion} onChange={(v) => update({ reducedMotion: v })} label="Reduzir animações" description="Desativa animações, transições e o elemento 3D. O sistema também respeita a preferência do seu dispositivo." />
-          <Switch checked={prefs.reminderNotifications} onChange={(v) => update({ reminderNotifications: v })} label="Lembretes do calendário" description="Notificações no FitLife para eventos com lembrete." />
-          <Switch checked={prefs.emailNotifications} onChange={(v) => update({ emailNotifications: v })} label="E-mails importantes" description="Segurança da conta e assinatura." />
+          <Switch checked={prefs.reminderNotifications} onChange={(v) => update({ reminderNotifications: v })} label="Lembretes do calendário" description="Notificações no FitLife para eventos com lembrete. E-mails de segurança da conta são sempre enviados." />
           <div className="grid gap-3 py-4 sm:grid-cols-2">
             <Field label="Meta de treinos por semana" htmlFor="s-w">
               <Select id="s-w" value={prefs.weeklyWorkoutTarget} onChange={(e) => update({ weeklyWorkoutTarget: Number(e.target.value) })}>

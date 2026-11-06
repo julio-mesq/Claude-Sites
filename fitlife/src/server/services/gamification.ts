@@ -1,5 +1,5 @@
 import "server-only";
-import { Prisma, type JourneyKind, type MissionMetric } from "@prisma/client";
+import type { JourneyKind, MissionMetric, Prisma } from "@prisma/client";
 import { db } from "../db";
 import { levelFromXp, streakFromKeys } from "@/lib/fitness-math";
 import { addDaysKey, dateKey, keyToDate, zonedStartOfDay } from "@/lib/utils";
@@ -26,12 +26,9 @@ type Tx = Prisma.TransactionClient | typeof db;
 /** Concede XP de forma idempotente. Retorna o XP efetivamente concedido. */
 export async function awardXp(userId: string, amount: number, reason: string, sourceKey: string, client: Tx = db) {
   if (amount <= 0) return 0;
-  try {
-    await client.xpEvent.create({ data: { userId, amount, reason, sourceKey } });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return 0;
-    throw err;
-  }
+  // skipDuplicates torna a concessão idempotente sem gerar erro (sourceKey é único por usuário).
+  const { count } = await client.xpEvent.createMany({ data: [{ userId, amount, reason, sourceKey }], skipDuplicates: true });
+  if (count === 0) return 0;
   const user = await client.user.update({ where: { id: userId }, data: { xp: { increment: amount } }, select: { xp: true, level: true } });
   const newLevel = levelFromXp(user.xp);
   if (newLevel > user.level) {
@@ -52,13 +49,8 @@ export async function addMilestone(
   client: Tx = db,
   occurredAt?: Date,
 ) {
-  try {
-    await client.journeyMilestone.create({ data: { userId, kind, title, description, sourceKey, data, occurredAt } });
-    return true;
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return false;
-    throw err;
-  }
+  const { count } = await client.journeyMilestone.createMany({ data: [{ userId, kind, title, description, sourceKey, data, occurredAt }], skipDuplicates: true });
+  return count === 1;
 }
 
 /** Dias (AAAA-MM-DD) com qualquer atividade registrada pelo usuário. */
@@ -78,12 +70,8 @@ export async function activityDayKeys(userId: string, sinceDays = 400) {
 async function grant(userId: string, code: string) {
   const ach = await db.achievement.findUnique({ where: { code } });
   if (!ach) return false;
-  try {
-    await db.userAchievement.create({ data: { userId, achievementId: ach.id } });
-  } catch (err) {
-    if (err instanceof Prisma.PrismaClientKnownRequestError && err.code === "P2002") return false;
-    throw err;
-  }
+  const { count } = await db.userAchievement.createMany({ data: [{ userId, achievementId: ach.id }], skipDuplicates: true });
+  if (count === 0) return false;
   await awardXp(userId, ach.xpReward, `Conquista: ${ach.name}`, `achievement:${code}`);
   await addMilestone(userId, "ACHIEVEMENT", ach.name, ach.description, `achievement:${code}`, { code });
   await notify(userId, { type: "achievement", title: `Conquista desbloqueada: ${ach.name}`, body: ach.description, href: "/app/achievements" });

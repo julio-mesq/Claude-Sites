@@ -14,5 +14,5 @@ export default defineConfig({
   ],
   webServer: process.env.E2E_NO_SERVER
     ? undefined
-    : { command: `npx next start -p ${PORT}`, url: `http://localhost:${PORT}/api/v1/health`, reuseExistingServer: true, timeout: 120_000 },
+    : { command: `npx next start -p ${PORT}`, url: `http://localhost:${PORT}/api/v1/health`, reuseExistingServer: false, timeout: 120_000 },
 });

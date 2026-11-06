@@ -26,13 +26,15 @@ export async function markRead(userId: string, ids: string[] | "all") {
 
 /** Gera notificações de lembretes do calendário vencidos (chamado de forma preguiçosa ao abrir o app). */
 export async function dispatchDueReminders(userId: string) {
+  const pref = await db.userPreference.findUnique({ where: { userId }, select: { reminderNotifications: true } });
   const due = await db.calendarEvent.findMany({
     where: { userId, remindAt: { lte: new Date() }, reminderSentAt: null, completedAt: null },
     take: 20,
   });
   for (const ev of due) {
     const updated = await db.calendarEvent.updateMany({ where: { id: ev.id, reminderSentAt: null }, data: { reminderSentAt: new Date() } });
-    if (updated.count === 1) {
+    // Com lembretes desativados, o evento é marcado como processado sem gerar notificação.
+    if (updated.count === 1 && pref?.reminderNotifications !== false) {
       await notify(userId, {
         type: "reminder",
         title: `Lembrete: ${ev.title}`,
