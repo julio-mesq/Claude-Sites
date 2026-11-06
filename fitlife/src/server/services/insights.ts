@@ -43,7 +43,7 @@ export async function pulse(userId: string, todayKey = dateKey()) {
   const score = Math.round(parts.reduce((acc, p) => acc + p.value * p.weight, 0));
   const hasData = activeKeys.length > 0;
   const weakest = [...parts].sort((a, b) => a.value - b.value)[0]!;
-  const label = !hasData ? "Sem dados" : score >= 80 ? "Em ritmo forte" : score >= 55 ? "Consistente" : score >= 30 ? "Ganhando ritmo" : "Recomeçando";
+  const label = !hasData ? "Sem dados" : score >= 80 ? "Em ritmo forte" : score >= 55 ? "Consistente" : score >= 30 ? "Ganhando ritmo" : "Começando";
   return {
     score,
     label,
