@@ -24,14 +24,36 @@ export const href = {
   overview: (id: string) => `#/p/${id}/overview`,
 };
 
-export function go(h: string) { window.location.hash = h; }
+// Na versão publicada como artefato o endereço da página não aceita rotas “#/…”,
+// então a navegação é mantida em memória (VITE_MEMORY_ROUTER=1 no build).
+const MEMORY = import.meta.env.VITE_MEMORY_ROUTER === '1';
+let memHash = '#/';
+const listeners = new Set<() => void>();
+const currentHash = () => (MEMORY ? memHash : window.location.hash);
+
+export function go(h: string) {
+  if (!MEMORY) { window.location.hash = h; return; }
+  memHash = h;
+  listeners.forEach((f) => f());
+}
 
 export function useRoute(): Route {
-  const [route, setRoute] = useState<Route>(() => parseHash(window.location.hash));
+  const [route, setRoute] = useState<Route>(() => parseHash(currentHash()));
   useEffect(() => {
-    const on = () => setRoute(parseHash(window.location.hash));
-    window.addEventListener('hashchange', on);
-    return () => window.removeEventListener('hashchange', on);
+    const on = () => setRoute(parseHash(currentHash()));
+    if (!MEMORY) {
+      window.addEventListener('hashchange', on);
+      return () => window.removeEventListener('hashchange', on);
+    }
+    listeners.add(on);
+    const onClick = (e: MouseEvent) => {
+      const a = (e.target as Element | null)?.closest?.('a[href^="#/"]');
+      if (!a || e.defaultPrevented) return;
+      e.preventDefault();
+      go(a.getAttribute('href')!);
+    };
+    document.addEventListener('click', onClick);
+    return () => { listeners.delete(on); document.removeEventListener('click', onClick); };
   }, []);
   return route;
 }
